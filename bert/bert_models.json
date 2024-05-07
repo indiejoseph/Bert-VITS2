@@ -1,6 +1,6 @@
 {
     "bert-base-cantonese": {
-        "repo_id": "indiejoseph/bert-base-cantonese",
+        "repo_id": "hon9kon9ize/bert-large-cantonese",
         "files": ["pytorch_model.bin"]
     },
     "deberta-v2-large-japanese-char-wwm": {
