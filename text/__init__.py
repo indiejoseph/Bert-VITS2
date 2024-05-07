@@ -22,8 +22,9 @@ def get_bert(norm_text, word2ph, language, device, style_text=None, style_weight
     from .chinese_bert import get_bert_feature as zh_bert
     from .english_bert_mock import get_bert_feature as en_bert
     from .japanese_bert import get_bert_feature as jp_bert
+    from .cantonese_bert import get_bert_feature as yue_bert
 
-    lang_bert_func_map = {"ZH": zh_bert, "EN": en_bert, "JP": jp_bert}
+    lang_bert_func_map = {"ZH": zh_bert, "EN": en_bert, "JP": jp_bert, "YUE": yue_bert}
     bert = lang_bert_func_map[language](
         norm_text, word2ph, device, style_text, style_weight
     )
