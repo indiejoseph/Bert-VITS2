@@ -465,7 +465,7 @@ if __name__ == "__main__":
             description="添加模型配置文件路径，不填则使用./config.json或../config.json",
         ),
         device: str = Query("cuda", description="推理使用设备"),
-        language: str = Query("ZH", description="模型默认语言"),
+        language: str = Query("YUE", description="模型默认语言"),
     ):
         """添加指定模型：允许重复添加相同路径模型，且不重复占用内存"""
         logger.info(
@@ -646,7 +646,7 @@ if __name__ == "__main__":
         global all_examples
         # 数据初始化
         if root_dir not in all_examples.keys():
-            all_examples[root_dir] = {"ZH": [], "JP": [], "EN": []}
+            all_examples[root_dir] = {"ZH": [], "JP": [], "EN": [], "YUE": []}
 
             examples = all_examples[root_dir]
 
@@ -667,6 +667,7 @@ if __name__ == "__main__":
                                     "ZH",
                                     "JP",
                                     "EN",
+                                    "YUE",
                                 ]:
                                     examples[data[2]].append(
                                         {
@@ -678,14 +679,17 @@ if __name__ == "__main__":
 
         examples = all_examples[root_dir]
         if language is None:
-            if len(examples["ZH"]) + len(examples["JP"]) + len(examples["EN"]) == 0:
+            if len(examples["ZH"]) + len(examples["JP"]) + len(examples["EN"] + len(examples["YUE"]) == 0:
                 return {"status": 17, "detail": "没有加载任何示例数据"}
             else:
                 # 随机选一个
                 rand_num = random.randint(
                     0,
-                    len(examples["ZH"]) + len(examples["JP"]) + len(examples["EN"]) - 1,
+                    len(examples["ZH"]) + len(examples["JP"]) + len(examples["EN"] + len(examples["YUE"]) - 1,
                 )
+                # YUE
+                if rand_num < len(examples["YUE"]):
+                    return {"status": 0, "Data": examples["YUE"][rand_num]}
                 # ZH
                 if rand_num < len(examples["ZH"]):
                     return {"status": 0, "Data": examples["ZH"][rand_num]}
