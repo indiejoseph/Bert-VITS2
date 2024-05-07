@@ -55,7 +55,8 @@ def resample(data_dir):
 
 def preprocess_text(data_dir):
     assert data_dir != "", "数据集名称不能为空"
-    start_path, lbl_path, train_path, val_path, config_path = get_path(data_dir)
+    start_path, lbl_path, train_path, val_path, config_path = get_path(
+        data_dir)
     lines = open(lbl_path, "r", encoding="utf-8").readlines()
     with open(lbl_path, "w", encoding="utf-8") as f:
         for line in lines:
@@ -93,6 +94,7 @@ if __name__ == "__main__":
                     value="# Bert-VITS2 数据预处理\n"
                     "## 预先准备：\n"
                     "下载 BERT 和 WavLM 模型：\n"
+                    "- [粵語 BERT](https://huggingface.co/hon9kon9ize/bert-large-cantonese)\n"
                     "- [中文 RoBERTa](https://huggingface.co/hfl/chinese-roberta-wwm-ext-large)\n"
                     "- [日文 DeBERTa](https://huggingface.co/ku-nlp/deberta-v2-large-japanese-char-wwm)\n"
                     "- [英文 DeBERTa](https://huggingface.co/microsoft/deberta-v3-large)\n"
@@ -141,7 +143,8 @@ if __name__ == "__main__":
                         maximum=64,
                         step=1,
                     )
-                    generate_config_btn = gr.Button(value="执行", variant="primary")
+                    generate_config_btn = gr.Button(
+                        value="执行", variant="primary")
                 _ = gr.Markdown(value="## 第二步：预处理音频文件")
                 resample_btn = gr.Button(value="执行", variant="primary")
                 _ = gr.Markdown(value="## 第三步：预处理标签文件")
@@ -159,7 +162,8 @@ if __name__ == "__main__":
             generate_config, inputs=[data_dir, batch_size], outputs=[info]
         )
         resample_btn.click(resample, inputs=[data_dir], outputs=[info])
-        preprocess_text_btn.click(preprocess_text, inputs=[data_dir], outputs=[info])
+        preprocess_text_btn.click(preprocess_text, inputs=[
+                                  data_dir], outputs=[info])
         bert_gen_btn.click(bert_gen, inputs=[data_dir], outputs=[info])
 
     webbrowser.open("http://127.0.0.1:7860")

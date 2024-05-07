@@ -10,6 +10,7 @@ def export_onnx(export_path, model_path, config_path, novq, dev, Extra):
         "chinese-roberta-wwm-ext-large",
         "deberta-v2-large-japanese",
         "bert-base-japanese-v3",
+        "bert-large-cantonese"
     ]
     if version == "2.0" or (version == "2.1" and novq):
         from .V200 import SynthesizerTrn, symbols

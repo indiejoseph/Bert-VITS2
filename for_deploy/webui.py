@@ -1,4 +1,14 @@
 # flake8: noqa: E402
+from infer_utils import BertFeature, ClapFeature
+import librosa
+from tools.translate import translate
+from config import config
+import numpy as np
+import webbrowser
+import gradio as gr
+from infer import infer, latest_version, get_net_g, infer_multilang
+import utils
+import torch
 import os
 import logging
 import re_matching
@@ -14,17 +24,6 @@ logging.basicConfig(
 )
 
 logger = logging.getLogger(__name__)
-
-import torch
-import utils
-from infer import infer, latest_version, get_net_g, infer_multilang
-import gradio as gr
-import webbrowser
-import numpy as np
-from config import config
-from tools.translate import translate
-import librosa
-from infer_utils import BertFeature, ClapFeature
 
 
 net_g = None
@@ -48,6 +47,10 @@ bert_feature_map = {
     "EN": BertFeature(
         "./bert/deberta-v3-large",
         language="EN",
+    ),
+    "YUE": BertFeature(
+        "./bert/bert-large-cantonese",
+        language="YUE",
     ),
 }
 
@@ -180,7 +183,8 @@ def tts_split(
             )
             audio16bit = gr.processing_utils.convert_to_16_bit_wav(audio)
             audio_list.append(audio16bit)
-            silence = np.zeros((int)(44100 * interval_between_para), dtype=np.int16)
+            silence = np.zeros(
+                (int)(44100 * interval_between_para), dtype=np.int16)
             audio_list.append(silence)
     else:
         for idx, p in enumerate(para_list):
@@ -553,4 +557,5 @@ if __name__ == "__main__":
 
     print("推理页面已开启!")
     webbrowser.open(f"http://127.0.0.1:{config.webui_config.port}")
-    app.launch(share=config.webui_config.share, server_port=config.webui_config.port)
+    app.launch(share=config.webui_config.share,
+               server_port=config.webui_config.port)
