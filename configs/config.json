@@ -10,8 +10,8 @@
       0.99
     ],
     "eps": 1e-09,
-    "batch_size": 16,
-    "bf16_run": false,
+    "batch_size": 22,
+    "bf16_run": true,
     "lr_decay": 0.99995,
     "segment_size": 16384,
     "init_lr_ratio": 1,
@@ -23,6 +23,7 @@
     "freeze_ZH_bert": false,
     "freeze_JP_bert": false,
     "freeze_EN_bert": false,
+    "freeze_YUE_bert": false,
     "freeze_emo": false
   },
   "data": {
@@ -946,11 +947,11 @@
     "use_spectral_norm": false,
     "gin_channels": 512,
     "slm": {
-        "model": "./slm/wavlm-base-plus",
-        "sr": 16000,
-        "hidden": 768,
-        "nlayers": 13,
-        "initial_channel": 64
+      "model": "./slm/wavlm-base-plus",
+      "sr": 16000,
+      "hidden": 768,
+      "nlayers": 13,
+      "initial_channel": 64
     }
   },
   "version": "2.3"

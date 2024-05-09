@@ -114,7 +114,8 @@ def load_checkpoint(checkpoint_path, model, optimizer=None, skip_optimizer=False
         model.load_state_dict(new_state_dict, strict=False)
 
     logger.info(
-        "Loaded checkpoint '{}' (iteration {})".format(checkpoint_path, iteration)
+        "Loaded checkpoint '{}' (iteration {})".format(
+            checkpoint_path, iteration)
     )
 
     return model, optimizer, learning_rate, iteration
@@ -180,7 +181,8 @@ def plot_spectrogram_to_numpy(spectrogram):
     import numpy as np
 
     fig, ax = plt.subplots(figsize=(10, 2))
-    im = ax.imshow(spectrogram, aspect="auto", origin="lower", interpolation="none")
+    im = ax.imshow(spectrogram, aspect="auto",
+                   origin="lower", interpolation="none")
     plt.colorbar(im, ax=ax)
     plt.xlabel("Frames")
     plt.ylabel("Channels")
@@ -225,8 +227,12 @@ def plot_alignment_to_numpy(alignment, info=None):
 
 
 def load_wav_to_torch(full_path):
-    sampling_rate, data = read(full_path)
-    return torch.FloatTensor(data.astype(np.float32)), sampling_rate
+    try:
+        sampling_rate, data = read(full_path)
+        return torch.FloatTensor(data.astype(np.float32)), sampling_rate
+    except Exception as e:
+        print(full_path)
+        raise e
 
 
 def load_filepaths_and_text(filename, split="|"):
@@ -244,7 +250,8 @@ def get_hparams(init=True):
         default="./configs/base.json",
         help="JSON file for configuration",
     )
-    parser.add_argument("-m", "--model", type=str, required=True, help="Model name")
+    parser.add_argument("-m", "--model", type=str,
+                        required=True, help="Model name")
 
     args = parser.parse_args()
     model_dir = os.path.join("./logs", args.model)
@@ -295,7 +302,8 @@ def clean_checkpoints(path_to_models="logs/44k/", n_ckpts_to_keep=2, sort_by_tim
 
     def x_sorted(_x):
         return sorted(
-            [f for f in ckpts_files if f.startswith(_x) and not f.endswith("_0.pth")],
+            [f for f in ckpts_files if f.startswith(
+                _x) and not f.endswith("_0.pth")],
             key=sort_key,
         )
 
@@ -368,7 +376,8 @@ def get_logger(model_dir, filename="train.log"):
     logger = logging.getLogger(os.path.basename(model_dir))
     logger.setLevel(logging.DEBUG)
 
-    formatter = logging.Formatter("%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s")
+    formatter = logging.Formatter(
+        "%(asctime)s\t%(name)s\t%(levelname)s\t%(message)s")
     if not os.path.exists(model_dir):
         os.makedirs(model_dir)
     h = logging.FileHandler(os.path.join(model_dir, filename))
@@ -451,7 +460,8 @@ def mix_model(
         if k not in state_dict1.keys():
             state_dict1[k] = state_dict2[k].clone()
     torch.save(
-        {"model": state_dict1, "iteration": 0, "optimizer": None, "learning_rate": 0},
+        {"model": state_dict1, "iteration": 0,
+            "optimizer": None, "learning_rate": 0},
         output_path,
     )
 

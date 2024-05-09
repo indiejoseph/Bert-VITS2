@@ -1,4 +1,13 @@
 # flake8: noqa: E402
+import librosa
+from tools.translate import translate
+from config import config
+import numpy as np
+import webbrowser
+import gradio as gr
+from infer import infer, latest_version, get_net_g, infer_multilang
+import utils
+import torch
 import gc
 import os
 import logging
@@ -16,15 +25,6 @@ logging.basicConfig(
 
 logger = logging.getLogger(__name__)
 
-import torch
-import utils
-from infer import infer, latest_version, get_net_g, infer_multilang
-import gradio as gr
-import webbrowser
-import numpy as np
-from config import config
-from tools.translate import translate
-import librosa
 
 net_g = None
 
@@ -168,7 +168,8 @@ def tts_split(
                 style_text,
                 style_weight,
             )
-            silence = np.zeros((int)(44100 * interval_between_para), dtype=np.int16)
+            silence = np.zeros(
+                (int)(44100 * interval_between_para), dtype=np.int16)
             audio_list.append(silence)
         else:
             audio_list_sent = []
@@ -229,7 +230,8 @@ def process_auto(text):
         if slice == "":
             continue
         temp_text, temp_lang = [], []
-        sentences_list = split_by_language(slice, target_languages=["zh", "ja", "en"])
+        sentences_list = split_by_language(
+            slice, target_languages=["zh", "ja", "en"])
         for sentence, lang in sentences_list:
             if sentence == "":
                 continue
@@ -399,7 +401,7 @@ if __name__ == "__main__":
     )
     speaker_ids = hps.data.spk2id
     speakers = list(speaker_ids.keys())
-    languages = ["ZH", "JP", "EN", "mix", "auto"]
+    languages = ["ZH", "JP", "EN", "YUE", "mix", "auto"]
     with gr.Blocks() as app:
         with gr.Row():
             with gr.Column():
@@ -566,4 +568,5 @@ if __name__ == "__main__":
 
     print("推理页面已开启!")
     webbrowser.open(f"http://127.0.0.1:{config.webui_config.port}")
-    app.launch(share=config.webui_config.share, server_port=config.webui_config.port)
+    app.launch(share=config.webui_config.share,
+               server_port=config.webui_config.port)

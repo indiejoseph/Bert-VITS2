@@ -163,22 +163,110 @@ en_symbols = [
 ]
 num_en_tones = 4
 
+# cantonese
+
+yue_symbols = [
+    "a",
+    "aa",
+    "aai",
+    "aak",
+    "aam",
+    "aan",
+    "aang",
+    "aap",
+    "aat",
+    "aau",
+    "ai",
+    "ak",
+    "am",
+    "an",
+    "ang",
+    "ap",
+    "at",
+    "au",
+    "b",
+    "c",
+    "d",
+    "e",
+    "ei",
+    "ek",
+    "eng",
+    "eoi",
+    "eon",
+    "eot",
+    "eu",
+    "em",
+    "en",
+    "ep",
+    "et",
+    "f",
+    "g",
+    "gw",
+    "h",
+    "i",
+    "ik",
+    "im",
+    "in",
+    "ing",
+    "ip",
+    "it",
+    "iu",
+    "j",
+    "k",
+    "kw",
+    "l",
+    "m",
+    "n",
+    "ng",
+    "o",
+    "oe",
+    "oek",
+    "oeng",
+    "oi",
+    "ok",
+    "on",
+    "ong",
+    "ot",
+    "ou",
+    "p",
+    "s",
+    "sil",
+    "sp",
+    "spl",
+    "t",
+    "u",
+    "ui",
+    "uk",
+    "un",
+    "ung",
+    "ut",
+    "w",
+    "yu",
+    "yun",
+    "yut",
+]
+
+num_yue_tones = 7
+
 # combine all symbols
-normal_symbols = sorted(set(zh_symbols + ja_symbols + en_symbols))
+normal_symbols = sorted(
+    set(zh_symbols + ja_symbols + en_symbols))
 symbols = [pad] + normal_symbols + pu_symbols
+symbols = symbols + sorted((set(yue_symbols) - set(symbols)))
 sil_phonemes_ids = [symbols.index(i) for i in pu_symbols]
 
 # combine all tones
-num_tones = num_zh_tones + num_ja_tones + num_en_tones
+num_tones = num_zh_tones + num_ja_tones + num_en_tones + num_yue_tones
 
 # language maps
-language_id_map = {"ZH": 0, "JP": 1, "EN": 2}
+language_id_map = {"ZH": 0, "JP": 1, "EN": 2, "YUE": 3}
 num_languages = len(language_id_map.keys())
 
 language_tone_start_map = {
     "ZH": 0,
     "JP": num_zh_tones,
     "EN": num_zh_tones + num_ja_tones,
+    "YUE": num_zh_tones + num_ja_tones + num_en_tones,
 }
 
 if __name__ == "__main__":

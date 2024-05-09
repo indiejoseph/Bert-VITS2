@@ -156,7 +156,8 @@ class StochasticDurationPredictor(nn.Module):
         gin_channels=0,
     ):
         super().__init__()
-        filter_channels = in_channels  # it needs to be removed from future version.
+        # it needs to be removed from future version.
+        filter_channels = in_channels
         self.in_channels = in_channels
         self.filter_channels = filter_channels
         self.kernel_size = kernel_size
@@ -212,7 +213,8 @@ class StochasticDurationPredictor(nn.Module):
             h_w = self.post_convs(h_w, x_mask)
             h_w = self.post_proj(h_w) * x_mask
             e_q = (
-                torch.randn(w.size(0), 2, w.size(2)).to(device=x.device, dtype=x.dtype)
+                torch.randn(w.size(0), 2, w.size(2)).to(
+                    device=x.device, dtype=x.dtype)
                 * x_mask
             )
             z_q = e_q
@@ -226,7 +228,8 @@ class StochasticDurationPredictor(nn.Module):
                 (F.logsigmoid(z_u) + F.logsigmoid(-z_u)) * x_mask, [1, 2]
             )
             logq = (
-                torch.sum(-0.5 * (math.log(2 * math.pi) + (e_q**2)) * x_mask, [1, 2])
+                torch.sum(-0.5 * (math.log(2 * math.pi) + (e_q**2))
+                          * x_mask, [1, 2])
                 - logdet_tot_q
             )
 
@@ -238,7 +241,8 @@ class StochasticDurationPredictor(nn.Module):
                 z, logdet = flow(z, x_mask, g=x, reverse=reverse)
                 logdet_tot = logdet_tot + logdet
             nll = (
-                torch.sum(0.5 * (math.log(2 * math.pi) + (z**2)) * x_mask, [1, 2])
+                torch.sum(0.5 * (math.log(2 * math.pi) + (z**2))
+                          * x_mask, [1, 2])
                 - logdet_tot
             )
             return nll + logq  # [b]
@@ -246,7 +250,8 @@ class StochasticDurationPredictor(nn.Module):
             flows = list(reversed(self.flows))
             flows = flows[:-2] + [flows[-1]]  # remove a useless vflow
             z = (
-                torch.randn(x.size(0), 2, x.size(2)).to(device=x.device, dtype=x.dtype)
+                torch.randn(x.size(0), 2, x.size(2)).to(
+                    device=x.device, dtype=x.dtype)
                 * noise_scale
             )
             for flow in flows:
@@ -362,6 +367,7 @@ class TextEncoder(nn.Module):
         self.bert_proj = nn.Conv1d(1024, hidden_channels, 1)
         self.ja_bert_proj = nn.Conv1d(1024, hidden_channels, 1)
         self.en_bert_proj = nn.Conv1d(1024, hidden_channels, 1)
+        self.yue_bert_proj = nn.Conv1d(1024, hidden_channels, 1)
 
         self.encoder = attentions.Encoder(
             hidden_channels,
@@ -374,10 +380,11 @@ class TextEncoder(nn.Module):
         )
         self.proj = nn.Conv1d(hidden_channels, out_channels * 2, 1)
 
-    def forward(self, x, x_lengths, tone, language, bert, ja_bert, en_bert, g=None):
+    def forward(self, x, x_lengths, tone, language, bert, ja_bert, en_bert, yue_bert, g=None):
         bert_emb = self.bert_proj(bert).transpose(1, 2)
         ja_bert_emb = self.ja_bert_proj(ja_bert).transpose(1, 2)
         en_bert_emb = self.en_bert_proj(en_bert).transpose(1, 2)
+        yue_bert_emb = self.yue_bert_proj(yue_bert).transpose(1, 2)
         x = (
             self.emb(x)
             + self.tone_emb(tone)
@@ -385,6 +392,7 @@ class TextEncoder(nn.Module):
             + bert_emb
             + ja_bert_emb
             + en_bert_emb
+            + yue_bert_emb
         ) * math.sqrt(
             self.hidden_channels
         )  # [b, t, h]
@@ -728,12 +736,14 @@ class WavLMDiscriminator(nn.Module):
                     )
                 ),
                 norm_f(
-                    nn.Conv1d(initial_channel * 4, initial_channel * 4, 5, 1, padding=2)
+                    nn.Conv1d(initial_channel * 4,
+                              initial_channel * 4, 5, 1, padding=2)
                 ),
             ]
         )
 
-        self.conv_post = norm_f(Conv1d(initial_channel * 4, 1, 3, 1, padding=1))
+        self.conv_post = norm_f(
+            Conv1d(initial_channel * 4, 1, 3, 1, padding=1))
 
     def forward(self, x):
         x = self.pre(x)
@@ -865,7 +875,8 @@ class SynthesizerTrn(nn.Module):
         )
         self.use_sdp = use_sdp
         self.use_noise_scaled_mas = kwargs.get("use_noise_scaled_mas", False)
-        self.mas_noise_scale_initial = kwargs.get("mas_noise_scale_initial", 0.01)
+        self.mas_noise_scale_initial = kwargs.get(
+            "mas_noise_scale_initial", 0.01)
         self.noise_scale_delta = kwargs.get("noise_scale_delta", 2e-6)
         self.current_mas_noise_scale = self.mas_noise_scale_initial
         if self.use_spk_conditioned_encoder and gin_channels > 0:
@@ -946,13 +957,14 @@ class SynthesizerTrn(nn.Module):
         bert,
         ja_bert,
         en_bert,
+        yue_bert,
     ):
         if self.n_speakers > 0:
             g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
         else:
             g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
         x, m_p, logs_p, x_mask = self.enc_p(
-            x, x_lengths, tone, language, bert, ja_bert, en_bert, g=g
+            x, x_lengths, tone, language, bert, ja_bert, en_bert, yue_bert, g=g
         )
         z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=g)
         z_p = self.flow(z, y_mask, g=g)
@@ -981,7 +993,8 @@ class SynthesizerTrn(nn.Module):
                 )
                 neg_cent = neg_cent + epsilon
 
-            attn_mask = torch.unsqueeze(x_mask, 2) * torch.unsqueeze(y_mask, -1)
+            attn_mask = torch.unsqueeze(
+                x_mask, 2) * torch.unsqueeze(y_mask, -1)
             attn = (
                 monotonic_align.maximum_path(neg_cent, attn_mask.squeeze(1))
                 .unsqueeze(1)
@@ -999,13 +1012,16 @@ class SynthesizerTrn(nn.Module):
         l_length_dp = torch.sum((logw - logw_) ** 2, [1, 2]) / torch.sum(
             x_mask
         )  # for averaging
-        l_length_sdp += torch.sum((logw_sdp - logw_) ** 2, [1, 2]) / torch.sum(x_mask)
+        l_length_sdp += torch.sum((logw_sdp - logw_)
+                                  ** 2, [1, 2]) / torch.sum(x_mask)
 
         l_length = l_length_dp + l_length_sdp
 
         # expand prior
-        m_p = torch.matmul(attn.squeeze(1), m_p.transpose(1, 2)).transpose(1, 2)
-        logs_p = torch.matmul(attn.squeeze(1), logs_p.transpose(1, 2)).transpose(1, 2)
+        m_p = torch.matmul(attn.squeeze(
+            1), m_p.transpose(1, 2)).transpose(1, 2)
+        logs_p = torch.matmul(attn.squeeze(
+            1), logs_p.transpose(1, 2)).transpose(1, 2)
 
         z_slice, ids_slice = commons.rand_slice_segments(
             z, y_lengths, self.segment_size
@@ -1033,6 +1049,7 @@ class SynthesizerTrn(nn.Module):
         bert,
         ja_bert,
         en_bert,
+        yue_bert,
         noise_scale=0.667,
         length_scale=1,
         noise_scale_w=0.8,
@@ -1047,7 +1064,7 @@ class SynthesizerTrn(nn.Module):
         else:
             g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
         x, m_p, logs_p, x_mask = self.enc_p(
-            x, x_lengths, tone, language, bert, ja_bert, en_bert, g=g
+            x, x_lengths, tone, language, bert, ja_bert, en_bert, yue_bert, g=g
         )
         logw = self.sdp(x, x_mask, g=g, reverse=True, noise_scale=noise_scale_w) * (
             sdp_ratio

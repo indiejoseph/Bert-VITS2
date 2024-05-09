@@ -361,7 +361,7 @@ def infer_multilang(
     skip_start=False,
     skip_end=False,
 ):
-    bert, ja_bert, en_bert, phones, tones, lang_ids = [], [], [], [], [], []
+    bert, ja_bert, en_bert, yue_bert, phones, tones, lang_ids = [], [], [], [], [], [], []
     # emo = get_emo_(reference_audio, emotion, sid)
     # if isinstance(reference_audio, np.ndarray):
     #     emo = get_clap_audio_feature(reference_audio, device)
@@ -406,7 +406,7 @@ def infer_multilang(
     bert = torch.concatenate(bert, dim=1)
     ja_bert = torch.concatenate(ja_bert, dim=1)
     en_bert = torch.concatenate(en_bert, dim=1)
-    yue_bert = torch.concatenate(en_bert, dim=1)
+    yue_bert = torch.concatenate(yue_bert, dim=1)
     phones = torch.concatenate(phones, dim=0)
     tones = torch.concatenate(tones, dim=0)
     lang_ids = torch.concatenate(lang_ids, dim=0)

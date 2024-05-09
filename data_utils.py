@@ -70,7 +70,8 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
                 audiopaths_sid_text_new.append(
                     [audiopath, spk, language, text, phones, tone, word2ph]
                 )
-                lengths.append(os.path.getsize(audiopath) // (2 * self.hop_length))
+                lengths.append(os.path.getsize(audiopath) //
+                               (2 * self.hop_length))
             else:
                 skipped += 1
         logger.info(
@@ -93,7 +94,7 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         spec, wav = self.get_audio(audiopath)
         sid = torch.LongTensor([int(self.spk_map[sid])])
 
-        return (phones, spec, wav, sid, tone, language, bert, ja_bert, en_bert)
+        return (phones, spec, wav, sid, tone, language, bert, ja_bert, en_bert, yue_bert)
 
     def get_audio(self, filename):
         audio, sampling_rate = load_wav_to_torch(filename)
@@ -138,7 +139,8 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         return spec, audio_norm
 
     def get_text(self, text, word2ph, phone, tone, language_str, wav_path):
-        phone, tone, language = cleaned_text_to_sequence(phone, tone, language_str)
+        phone, tone, language = cleaned_text_to_sequence(
+            phone, tone, language_str)
         if self.add_blank:
             phone = commons.intersperse(phone, 0)
             tone = commons.intersperse(tone, 0)
@@ -222,8 +224,10 @@ class TextAudioSpeakerCollate:
         bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
         ja_bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
         en_bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
+        yue_bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
 
-        spec_padded = torch.FloatTensor(len(batch), batch[0][1].size(0), max_spec_len)
+        spec_padded = torch.FloatTensor(
+            len(batch), batch[0][1].size(0), max_spec_len)
         wav_padded = torch.FloatTensor(len(batch), 1, max_wav_len)
         text_padded.zero_()
         tone_padded.zero_()
@@ -233,6 +237,7 @@ class TextAudioSpeakerCollate:
         bert_padded.zero_()
         ja_bert_padded.zero_()
         en_bert_padded.zero_()
+        yue_bert_padded.zero_()
 
         for i in range(len(ids_sorted_decreasing)):
             row = batch[ids_sorted_decreasing[i]]
@@ -266,6 +271,9 @@ class TextAudioSpeakerCollate:
             en_bert = row[8]
             en_bert_padded[i, :, : en_bert.size(1)] = en_bert
 
+            yue_bert = row[9]
+            yue_bert_padded[i, :, : yue_bert.size(1)] = yue_bert
+
         return (
             text_padded,
             text_lengths,
@@ -279,6 +287,7 @@ class TextAudioSpeakerCollate:
             bert_padded,
             ja_bert_padded,
             en_bert_padded,
+            yue_bert_padded,
         )
 
 
@@ -350,7 +359,8 @@ class DistributedBucketSampler(torch.utils.data.distributed.DistributedSampler):
         indices = []
         if self.shuffle:
             for bucket in self.buckets:
-                indices.append(torch.randperm(len(bucket), generator=g).tolist())
+                indices.append(torch.randperm(
+                    len(bucket), generator=g).tolist())
         else:
             for bucket in self.buckets:
                 indices.append(list(range(len(bucket))))
@@ -373,14 +383,14 @@ class DistributedBucketSampler(torch.utils.data.distributed.DistributedSampler):
             )
 
             # subsample
-            ids_bucket = ids_bucket[self.rank :: self.num_replicas]
+            ids_bucket = ids_bucket[self.rank:: self.num_replicas]
 
             # batching
             for j in range(len(ids_bucket) // self.batch_size):
                 batch = [
                     bucket[idx]
                     for idx in ids_bucket[
-                        j * self.batch_size : (j + 1) * self.batch_size
+                        j * self.batch_size: (j + 1) * self.batch_size
                     ]
                 ]
                 batches.append(batch)

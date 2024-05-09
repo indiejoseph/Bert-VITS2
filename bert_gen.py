@@ -41,9 +41,21 @@ def process_line(x):
         bert = torch.load(bert_path)
         assert bert.shape[0] == 2048
     except Exception:
-        bert = get_bert(text, word2ph, language_str, device)
-        assert bert.shape[-1] == len(phone)
-        torch.save(bert, bert_path)
+        try:
+            bert = get_bert(text, word2ph, language_str, device)
+            assert bert.shape[-1] == len(phone)
+            torch.save(bert, bert_path)
+        except Exception as e:
+            print(f"Error: {text=}")
+            print(f"Error: {phone=}")
+            print(f"Error: {tone=}")
+            print(f"Error: {word2ph=}")
+            print(f"Error: {language_str=}")
+            print(f"Error: {device=}")
+            print(f"Error: {add_blank=}")
+            print(line.strip().split("|"))
+
+            raise e
 
 
 preprocess_text_config = config.preprocess_text_config
