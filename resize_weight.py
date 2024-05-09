@@ -4,17 +4,19 @@ from text.symbols import symbols, num_tones, num_languages
 import argparse
 
 
-def resize_embedding_layer(weight, new_vocab_size):
+def resize_embedding_layer(weight, new_size):
     old_vocab_size = weight.size(0)
-    if new_vocab_size < old_vocab_size:
-        return weight[:new_vocab_size, :]
-    elif new_vocab_size == old_vocab_size:
+    if new_size < old_vocab_size:
+        return weight[:new_size, :]
+    elif new_size == old_vocab_size:
         return weight
     else:
-        new_weight = weight.new_zeros(
-            new_vocab_size - old_vocab_size, weight.size(1))
-        hidden_channels = weight.size(1)
-        new_weight = nn.init.normal_(new_weight, 0.0, hidden_channels**-0.5)
+        new_weight = weight.new_zeros(new_size - old_vocab_size, weight.size(1))
+        embedding_dim = weight.size(1)
+        avg_weight = weight.mean(dim=0, keepdim=True)
+        noise_weight = torch.empty_like(new_weight)
+        noise_weight.normal_(mean=0, std=(1.0 / math.sqrt(embedding_dim)))
+        new_weight = avg_weight + noise_weight
 
         return torch.cat([weight, new_weight], dim=0)
 
