@@ -193,12 +193,17 @@ def get_jyutping(text):
     converted_text = j.jyutping(text, tone_numbers=True, spaces=True)
     converted_words = converted_text.split()
 
+    # replace ... with …
+    converted_text = re.sub(r'\.{2,}', '…', converted_text)
+    # replace -- with -
+    converted_text = re.sub(r'-{2,}', '-', converted_text)
+
     for i, word in enumerate(converted_words):
         if set(word) <= set(text) - set(punctuation):
             converted_word = pycantonese.characters_to_jyutping(word)[0][1]
             converted_words[i] = converted_word
 
-        if converted_words[i] not in punctuation and re.search(r'^[a-zA-Z]+[1-6]$', converted_words[i]) is None and re.search(r'^[\-]+$', converted_words[i]) is None:
+        if converted_words[i] not in punctuation and re.search(r'^[a-zA-Z]+[1-6]$', converted_words[i]) is None:
             raise ValueError(
                 f"Failed to convert {converted_words[i]}, {converted_text}")
 
