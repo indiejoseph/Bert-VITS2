@@ -1,7 +1,7 @@
 import torch
-import torch.nn as nn
 from text.symbols import symbols, num_tones, num_languages
 import argparse
+import math
 
 
 def resize_embedding_layer(weight, new_size):
