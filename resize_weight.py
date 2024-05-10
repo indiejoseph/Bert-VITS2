@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 from text.symbols import symbols, num_tones, num_languages
 import argparse
+import math
 
 
 def resize_embedding_layer(weight, new_size):
@@ -11,7 +12,8 @@ def resize_embedding_layer(weight, new_size):
     elif new_size == old_vocab_size:
         return weight
     else:
-        new_weight = weight.new_zeros(new_size - old_vocab_size, weight.size(1))
+        new_weight = weight.new_zeros(
+            new_size - old_vocab_size, weight.size(1))
         embedding_dim = weight.size(1)
         avg_weight = weight.mean(dim=0, keepdim=True)
         noise_weight = torch.empty_like(new_weight)
