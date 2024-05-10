@@ -218,9 +218,9 @@ def get_jyutping(text):
 
 
 def get_bert_feature(text, word2ph):
-    from text import chinese_bert
+    from text import cantonese_bert
 
-    return chinese_bert.get_bert_feature(text, word2ph)
+    return cantonese_bert.get_bert_feature(text, word2ph)
 
 
 def g2p(text):

@@ -1,26 +1,20 @@
 import torch
 import torch.nn as nn
-from text.symbols import symbols, num_tones, num_languages
+from text.symbols import symbols, num_tones, num_languages, language_tone_start_map, num_en_tones
 import argparse
 import math
 
 
+# This function is used to resize the embedding layer of the model, and based on the original G_0.pth file
 def resize_embedding_layer(weight, new_size):
-    old_vocab_size = weight.size(0)
-    if new_size < old_vocab_size:
-        return weight[:new_size, :]
-    elif new_size == old_vocab_size:
-        return weight
-    else:
-        new_weight = weight.new_zeros(
-            new_size - old_vocab_size, weight.size(1))
-        embedding_dim = weight.size(1)
-        avg_weight = weight.mean(dim=0, keepdim=True)
-        noise_weight = torch.empty_like(new_weight)
-        noise_weight.normal_(mean=0, std=(1.0 / math.sqrt(embedding_dim)))
-        new_weight = avg_weight + noise_weight
+    new_weight = weight.new_zeros(new_size, weight.size(1))
+    embedding_dim = weight.size(1)
+    avg_weight = weight.mean(dim=0, keepdim=True)
+    noise_weight = torch.empty_like(new_weight)
+    noise_weight.normal_(mean=0, std=(1.0 / math.sqrt(embedding_dim)))
+    new_weight = avg_weight + noise_weight
 
-        return torch.cat([weight, new_weight], dim=0)
+    return new_weight
 
 
 if __name__ == "__main__":

@@ -256,17 +256,15 @@ symbols = symbols + sorted((set(yue_symbols) - set(symbols)))
 sil_phonemes_ids = [symbols.index(i) for i in pu_symbols]
 
 # combine all tones
-num_tones = num_zh_tones + num_ja_tones + num_en_tones + num_yue_tones
+num_tones = num_en_tones + num_yue_tones
 
 # language maps
 language_id_map = {"ZH": 0, "JP": 1, "EN": 2, "YUE": 3}
 num_languages = len(language_id_map.keys())
 
 language_tone_start_map = {
-    "ZH": 0,
-    "JP": num_zh_tones,
-    "EN": num_zh_tones + num_ja_tones,
-    "YUE": num_zh_tones + num_ja_tones + num_en_tones,
+    "EN": 0,
+    "YUE": num_en_tones,
 }
 
 if __name__ == "__main__":
