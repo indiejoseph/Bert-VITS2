@@ -231,13 +231,11 @@ def process_auto(text):
             continue
         temp_text, temp_lang = [], []
         sentences_list = split_by_language(
-            slice, target_languages=["zh", "ja", "en"])
+            slice, target_languages=["en", "yue"])
         for sentence, lang in sentences_list:
             if sentence == "":
                 continue
             temp_text.append(sentence)
-            if lang == "ja":
-                lang = "jp"
             temp_lang.append(lang.upper())
         _text.append(temp_text)
         _lang.append(temp_lang)
@@ -395,13 +393,13 @@ if __name__ == "__main__":
         logging.basicConfig(level=logging.DEBUG)
     hps = utils.get_hparams_from_file(config.webui_config.config_path)
     # 若config.json中未指定版本则默认为最新版本
-    version = hps.version if hasattr(hps, "version") else latest_version
+    # version = hps.version if hasattr(hps, "version") else latest_version
     net_g = get_net_g(
-        model_path=config.webui_config.model, version=version, device=device, hps=hps
+        model_path=config.webui_config.model, device=device, hps=hps
     )
     speaker_ids = hps.data.spk2id
     speakers = list(speaker_ids.keys())
-    languages = ["ZH", "JP", "EN", "YUE", "mix", "auto"]
+    languages = ["EN", "YUE", "mix", "auto"]
     with gr.Blocks() as app:
         with gr.Row():
             with gr.Column():

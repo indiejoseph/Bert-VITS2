@@ -204,19 +204,9 @@ def run():
         **hps.model,
     ).cuda(local_rank)
 
-    if getattr(hps.train, "freeze_ZH_bert", False):
-        print("Freezing ZH bert encoder !!!")
-        for param in net_g.enc_p.bert_proj.parameters():
-            param.requires_grad = False
-
     if getattr(hps.train, "freeze_EN_bert", False):
         print("Freezing EN bert encoder !!!")
         for param in net_g.enc_p.en_bert_proj.parameters():
-            param.requires_grad = False
-
-    if getattr(hps.train, "freeze_JP_bert", False):
-        print("Freezing JP bert encoder !!!")
-        for param in net_g.enc_p.ja_bert_proj.parameters():
             param.requires_grad = False
 
     if getattr(hps.train, "freeze_YUE_bert", False):
@@ -256,7 +246,8 @@ def run():
         )
     else:
         optim_dur_disc = None
-    net_g = DDP(net_g, device_ids=[local_rank], bucket_cap_mb=512)
+    net_g = DDP(net_g, device_ids=[local_rank],
+                bucket_cap_mb=512, find_unused_parameters=True)
     net_d = DDP(net_d, device_ids=[local_rank], bucket_cap_mb=512)
     net_wd = DDP(net_wd, device_ids=[local_rank], bucket_cap_mb=512)
     if net_dur_disc is not None:
@@ -267,6 +258,7 @@ def run():
         )
 
     # 下载底模
+
     if config.train_ms_config.base["use_base_model"]:
         utils.download_checkpoint(
             hps.model_dir,
@@ -439,8 +431,6 @@ def train_and_evaluate(
         speakers,
         tone,
         language,
-        bert,
-        ja_bert,
         en_bert,
         yue_bert,
     ) in enumerate(tqdm(train_loader)):
@@ -463,8 +453,6 @@ def train_and_evaluate(
         speakers = speakers.cuda(local_rank, non_blocking=True)
         tone = tone.cuda(local_rank, non_blocking=True)
         language = language.cuda(local_rank, non_blocking=True)
-        bert = bert.cuda(local_rank, non_blocking=True)
-        ja_bert = ja_bert.cuda(local_rank, non_blocking=True)
         en_bert = en_bert.cuda(local_rank, non_blocking=True)
         yue_bert = yue_bert.cuda(local_rank, non_blocking=True)
 
@@ -487,12 +475,9 @@ def train_and_evaluate(
                 speakers,
                 tone,
                 language,
-                bert,
-                ja_bert,
                 en_bert,
                 yue_bert,
             )
-
             mel = spec_to_mel_torch(
                 spec,
                 hps.data.filter_length,
@@ -783,8 +768,6 @@ def evaluate(hps, generator, eval_loader, writer_eval):
             speakers,
             tone,
             language,
-            bert,
-            ja_bert,
             en_bert,
             yue_bert,
         ) in enumerate(eval_loader):
@@ -792,8 +775,6 @@ def evaluate(hps, generator, eval_loader, writer_eval):
             spec, spec_lengths = spec.cuda(), spec_lengths.cuda()
             y, y_lengths = y.cuda(), y_lengths.cuda()
             speakers = speakers.cuda()
-            bert = bert.cuda()
-            ja_bert = ja_bert.cuda()
             en_bert = en_bert.cuda()
             yue_bert = yue_bert.cuda()
             tone = tone.cuda()
@@ -805,8 +786,6 @@ def evaluate(hps, generator, eval_loader, writer_eval):
                     speakers,
                     tone,
                     language,
-                    bert,
-                    ja_bert,
                     en_bert,
                     yue_bert,
                     y=spec,

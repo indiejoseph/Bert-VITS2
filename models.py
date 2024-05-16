@@ -380,17 +380,13 @@ class TextEncoder(nn.Module):
         )
         self.proj = nn.Conv1d(hidden_channels, out_channels * 2, 1)
 
-    def forward(self, x, x_lengths, tone, language, bert, ja_bert, en_bert, yue_bert, g=None):
-        bert_emb = self.bert_proj(bert).transpose(1, 2)
-        ja_bert_emb = self.ja_bert_proj(ja_bert).transpose(1, 2)
+    def forward(self, x, x_lengths, tone, language, en_bert, yue_bert, g=None):
         en_bert_emb = self.en_bert_proj(en_bert).transpose(1, 2)
         yue_bert_emb = self.yue_bert_proj(yue_bert).transpose(1, 2)
         x = (
             self.emb(x)
             + self.tone_emb(tone)
             + self.language_emb(language)
-            + bert_emb
-            + ja_bert_emb
             + en_bert_emb
             + yue_bert_emb
         ) * math.sqrt(
@@ -940,10 +936,11 @@ class SynthesizerTrn(nn.Module):
             hidden_channels, 256, 3, 0.5, gin_channels=gin_channels
         )
 
-        if n_speakers >= 1:
-            self.emb_g = nn.Embedding(n_speakers, gin_channels)
-        else:
-            self.ref_enc = ReferenceEncoder(spec_channels, gin_channels)
+        # if n_speakers >= 1:
+        #     self.emb_g = nn.Embedding(n_speakers, gin_channels)
+        # else:
+        #     self.ref_enc = ReferenceEncoder(spec_channels, gin_channels)
+        self.ref_enc = ReferenceEncoder(spec_channels, gin_channels)
 
     def forward(
         self,
@@ -954,17 +951,17 @@ class SynthesizerTrn(nn.Module):
         sid,
         tone,
         language,
-        bert,
-        ja_bert,
         en_bert,
         yue_bert,
     ):
-        if self.n_speakers > 0:
-            g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
-        else:
-            g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
+        # if self.n_speakers > 0:
+        #     g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
+        # else:
+        #     g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
+        g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
+
         x, m_p, logs_p, x_mask = self.enc_p(
-            x, x_lengths, tone, language, bert, ja_bert, en_bert, yue_bert, g=g
+            x, x_lengths, tone, language, en_bert, yue_bert, g=g
         )
         z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=g)
         z_p = self.flow(z, y_mask, g=g)
@@ -1022,11 +1019,11 @@ class SynthesizerTrn(nn.Module):
             1), m_p.transpose(1, 2)).transpose(1, 2)
         logs_p = torch.matmul(attn.squeeze(
             1), logs_p.transpose(1, 2)).transpose(1, 2)
-
         z_slice, ids_slice = commons.rand_slice_segments(
             z, y_lengths, self.segment_size
         )
         o = self.dec(z_slice, g=g)
+
         return (
             o,
             l_length,
@@ -1046,8 +1043,6 @@ class SynthesizerTrn(nn.Module):
         sid,
         tone,
         language,
-        bert,
-        ja_bert,
         en_bert,
         yue_bert,
         noise_scale=0.667,
@@ -1059,12 +1054,14 @@ class SynthesizerTrn(nn.Module):
     ):
         # x, m_p, logs_p, x_mask = self.enc_p(x, x_lengths, tone, language, bert)
         # g = self.gst(y)
-        if self.n_speakers > 0:
-            g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
-        else:
-            g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
+        # if self.n_speakers > 0:
+        #     g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
+        # else:
+        #     g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
+        g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
+
         x, m_p, logs_p, x_mask = self.enc_p(
-            x, x_lengths, tone, language, bert, ja_bert, en_bert, yue_bert, g=g
+            x, x_lengths, tone, language, en_bert, yue_bert, g=g
         )
         logw = self.sdp(x, x_mask, g=g, reverse=True, noise_scale=noise_scale_w) * (
             sdp_ratio
@@ -1087,5 +1084,17 @@ class SynthesizerTrn(nn.Module):
 
         z_p = m_p + torch.randn_like(m_p) * torch.exp(logs_p) * noise_scale
         z = self.flow(z_p, y_mask, g=g, reverse=True)
+
         o = self.dec((z * y_mask)[:, :, :max_len], g=g)
         return o, attn, y_mask, (z, z_p, m_p, logs_p)
+
+    def voice_conversion(self, y, y_lengths, sid_src, sid_tgt):
+        assert self.n_speakers > 0, "n_speakers have to be larger than 0."
+        g_src = self.emb_g(sid_src).unsqueeze(-1)
+        g_tgt = self.emb_g(sid_tgt).unsqueeze(-1)
+        z, m_q, logs_q, y_mask = self.enc_q(y, y_lengths, g=g_src)
+        z_p = self.flow(z, y_mask, g=g_src)
+        z_hat = self.flow(z_p, y_mask, g=g_tgt, reverse=True)
+        o_hat = self.dec(z_hat * y_mask, g=g_tgt)
+
+        return o_hat, y_mask, (z, z_p, z_hat)
