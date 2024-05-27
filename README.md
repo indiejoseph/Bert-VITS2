@@ -1,7 +1,3 @@
-Fork from https://github.com/fishaudio/Bert-VITS2,
-
-and borrowed the Cantonese Jyutping conversion from https://github.com/Naozumi520/Bert-VITS2-Cantonese-Yue
-
 ###
 
 <div align="center">

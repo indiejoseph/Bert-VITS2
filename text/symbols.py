@@ -2,180 +2,10 @@ punctuation = ["!", "?", "…", ",", ".", "'", "-"]
 pu_symbols = punctuation + ["SP", "UNK"]
 pad = "_"
 
-# chinese
-zh_symbols = [
-    "E",
-    "En",
+# waitau
+
+waitau_symbols = [
     "a",
-    "ai",
-    "an",
-    "ang",
-    "ao",
-    "b",
-    "c",
-    "ch",
-    "d",
-    "e",
-    "ei",
-    "en",
-    "eng",
-    "er",
-    "f",
-    "g",
-    "h",
-    "i",
-    "i0",
-    "ia",
-    "ian",
-    "iang",
-    "iao",
-    "ie",
-    "in",
-    "ing",
-    "iong",
-    "ir",
-    "iu",
-    "j",
-    "k",
-    "l",
-    "m",
-    "n",
-    "o",
-    "ong",
-    "ou",
-    "p",
-    "q",
-    "r",
-    "s",
-    "sh",
-    "t",
-    "u",
-    "ua",
-    "uai",
-    "uan",
-    "uang",
-    "ui",
-    "un",
-    "uo",
-    "v",
-    "van",
-    "ve",
-    "vn",
-    "w",
-    "x",
-    "y",
-    "z",
-    "zh",
-    "AA",
-    "EE",
-    "OO",
-]
-num_zh_tones = 6
-
-# japanese
-ja_symbols = [
-    "N",
-    "a",
-    "a:",
-    "b",
-    "by",
-    "ch",
-    "d",
-    "dy",
-    "e",
-    "e:",
-    "f",
-    "g",
-    "gy",
-    "h",
-    "hy",
-    "i",
-    "i:",
-    "j",
-    "k",
-    "ky",
-    "m",
-    "my",
-    "n",
-    "ny",
-    "o",
-    "o:",
-    "p",
-    "py",
-    "q",
-    "r",
-    "ry",
-    "s",
-    "sh",
-    "t",
-    "ts",
-    "ty",
-    "u",
-    "u:",
-    "w",
-    "y",
-    "z",
-    "zy",
-]
-num_ja_tones = 2
-
-# English
-en_symbols = [
-    "aa",
-    "ae",
-    "ah",
-    "ao",
-    "aw",
-    "ay",
-    "b",
-    "ch",
-    "d",
-    "dh",
-    "eh",
-    "er",
-    "ey",
-    "f",
-    "g",
-    "hh",
-    "ih",
-    "iy",
-    "jh",
-    "k",
-    "l",
-    "m",
-    "n",
-    "ng",
-    "ow",
-    "oy",
-    "p",
-    "r",
-    "s",
-    "sh",
-    "t",
-    "th",
-    "uh",
-    "uw",
-    "V",
-    "w",
-    "y",
-    "z",
-    "zh",
-]
-num_en_tones = 4
-
-# cantonese
-
-yue_symbols = [
-    "a",
-    "aa",
-    "aai",
-    "aak",
-    "aam",
-    "aan",
-    "aang",
-    "aap",
-    "aat",
-    "aau",
     "ai",
     "ak",
     "am",
@@ -184,6 +14,14 @@ yue_symbols = [
     "ap",
     "at",
     "au",
+    "äi",
+    "äk",
+    "äm",
+    "än",
+    "äng",
+    "äp",
+    "ät",
+    "äu",
     "b",
     "c",
     "d",
@@ -191,9 +29,9 @@ yue_symbols = [
     "ei",
     "ek",
     "eng",
-    "eoi",
+    "öi",
     "eon",
-    "eot",
+    "öt",
     "eu",
     "em",
     "en",
@@ -211,7 +49,7 @@ yue_symbols = [
     "ip",
     "it",
     "iu",
-    "j",
+    "y",
     "k",
     "kw",
     "l",
@@ -219,9 +57,9 @@ yue_symbols = [
     "n",
     "ng",
     "o",
-    "oe",
-    "oek",
-    "oeng",
+    "ö",
+    "ök",
+    "öng",
     "oi",
     "ok",
     "on",
@@ -230,9 +68,6 @@ yue_symbols = [
     "ou",
     "p",
     "s",
-    "sil",
-    "sp",
-    "spl",
     "t",
     "u",
     "ui",
@@ -241,35 +76,39 @@ yue_symbols = [
     "ung",
     "ut",
     "w",
-    "yu",
-    "yun",
-    "yut",
+    "ü",
+    "ün",
+    "üt",
+    "oing",
+    "z",
+    "ä",
+    "äing",
+    "æing",
+    "æk",
+    "æng",
+    "ön",
+    "ük",
+    "üng",
 ]
-
-num_yue_tones = 7
+num_waitau_tones = 7
 
 # combine all symbols
-normal_symbols = sorted(
-    set(zh_symbols + ja_symbols + en_symbols))
+normal_symbols = sorted(set(waitau_symbols))
 symbols = [pad] + normal_symbols + pu_symbols
-symbols = symbols + sorted((set(yue_symbols) - set(symbols)))
+symbols = symbols + sorted((set(waitau_symbols) - set(symbols)))
 sil_phonemes_ids = [symbols.index(i) for i in pu_symbols]
 
 # combine all tones
-num_tones = num_zh_tones + num_ja_tones + num_en_tones + num_yue_tones
+num_tones = num_waitau_tones
 
 # language maps
-language_id_map = {"ZH": 0, "JP": 1, "EN": 2, "YUE": 3}
+language_id_map = {"WAITAU": 0}
 num_languages = len(language_id_map.keys())
 
 language_tone_start_map = {
-    "ZH": 0,
-    "JP": num_zh_tones,
-    "EN": num_zh_tones + num_ja_tones,
-    "YUE": num_zh_tones + num_ja_tones + num_en_tones,
+    "WAITAU": 0,
 }
 
 if __name__ == "__main__":
-    a = set(zh_symbols)
-    b = set(en_symbols)
-    print(sorted(a & b))
+    a = set(waitau_symbols)
+    print(sorted(a))

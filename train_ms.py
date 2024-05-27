@@ -204,21 +204,6 @@ def run():
         **hps.model,
     ).cuda(local_rank)
 
-    if getattr(hps.train, "freeze_ZH_bert", False):
-        print("Freezing ZH bert encoder !!!")
-        for param in net_g.enc_p.bert_proj.parameters():
-            param.requires_grad = False
-
-    if getattr(hps.train, "freeze_EN_bert", False):
-        print("Freezing EN bert encoder !!!")
-        for param in net_g.enc_p.en_bert_proj.parameters():
-            param.requires_grad = False
-
-    if getattr(hps.train, "freeze_JP_bert", False):
-        print("Freezing JP bert encoder !!!")
-        for param in net_g.enc_p.ja_bert_proj.parameters():
-            param.requires_grad = False
-
     if getattr(hps.train, "freeze_YUE_bert", False):
         print("Freezing YUE bert encoder !!!")
         for param in net_g.enc_p.yue_bert_proj.parameters():
@@ -439,9 +424,6 @@ def train_and_evaluate(
         speakers,
         tone,
         language,
-        bert,
-        ja_bert,
-        en_bert,
         yue_bert,
     ) in enumerate(tqdm(train_loader)):
         if net_g.module.use_noise_scaled_mas:
@@ -463,9 +445,6 @@ def train_and_evaluate(
         speakers = speakers.cuda(local_rank, non_blocking=True)
         tone = tone.cuda(local_rank, non_blocking=True)
         language = language.cuda(local_rank, non_blocking=True)
-        bert = bert.cuda(local_rank, non_blocking=True)
-        ja_bert = ja_bert.cuda(local_rank, non_blocking=True)
-        en_bert = en_bert.cuda(local_rank, non_blocking=True)
         yue_bert = yue_bert.cuda(local_rank, non_blocking=True)
 
         with autocast(enabled=hps.train.bf16_run, dtype=torch.bfloat16):
@@ -487,9 +466,6 @@ def train_and_evaluate(
                 speakers,
                 tone,
                 language,
-                bert,
-                ja_bert,
-                en_bert,
                 yue_bert,
             )
 
@@ -783,18 +759,12 @@ def evaluate(hps, generator, eval_loader, writer_eval):
             speakers,
             tone,
             language,
-            bert,
-            ja_bert,
-            en_bert,
             yue_bert,
         ) in enumerate(eval_loader):
             x, x_lengths = x.cuda(), x_lengths.cuda()
             spec, spec_lengths = spec.cuda(), spec_lengths.cuda()
             y, y_lengths = y.cuda(), y_lengths.cuda()
             speakers = speakers.cuda()
-            bert = bert.cuda()
-            ja_bert = ja_bert.cuda()
-            en_bert = en_bert.cuda()
             yue_bert = yue_bert.cuda()
             tone = tone.cuda()
             language = language.cuda()
@@ -805,9 +775,6 @@ def evaluate(hps, generator, eval_loader, writer_eval):
                     speakers,
                     tone,
                     language,
-                    bert,
-                    ja_bert,
-                    en_bert,
                     yue_bert,
                     y=spec,
                     max_len=1000,

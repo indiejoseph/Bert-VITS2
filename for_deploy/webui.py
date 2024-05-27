@@ -36,21 +36,9 @@ os.environ["OMP_NUM_THREADS"] = "1"
 os.environ["MKL_NUM_THREADS"] = "1"
 
 bert_feature_map = {
-    "ZH": BertFeature(
-        "./bert/chinese-roberta-wwm-ext-large",
-        language="ZH",
-    ),
-    "JP": BertFeature(
-        "./bert/deberta-v2-large-japanese-char-wwm",
-        language="JP",
-    ),
-    "EN": BertFeature(
-        "./bert/deberta-v3-large",
-        language="EN",
-    ),
-    "YUE": BertFeature(
+    "WAITAU": BertFeature(
         "./bert/bert-large-cantonese",
-        language="YUE",
+        language="WAITAU",
     ),
 }
 
@@ -418,7 +406,7 @@ if __name__ == "__main__":
     )
     speaker_ids = hps.data.spk2id
     speakers = list(speaker_ids.keys())
-    languages = ["ZH", "JP", "EN", "mix", "auto"]
+    languages = ["WAITAU"]
     with gr.Blocks() as app:
         with gr.Row():
             with gr.Column():

@@ -20,54 +20,54 @@ import utils
 from models import SynthesizerTrn
 from text.symbols import symbols
 
-from oldVersion.V220.models import SynthesizerTrn as V220SynthesizerTrn
-from oldVersion.V220.text import symbols as V220symbols
-from oldVersion.V210.models import SynthesizerTrn as V210SynthesizerTrn
-from oldVersion.V210.text import symbols as V210symbols
-from oldVersion.V200.models import SynthesizerTrn as V200SynthesizerTrn
-from oldVersion.V200.text import symbols as V200symbols
-from oldVersion.V111.models import SynthesizerTrn as V111SynthesizerTrn
-from oldVersion.V111.text import symbols as V111symbols
-from oldVersion.V110.models import SynthesizerTrn as V110SynthesizerTrn
-from oldVersion.V110.text import symbols as V110symbols
-from oldVersion.V101.models import SynthesizerTrn as V101SynthesizerTrn
-from oldVersion.V101.text import symbols as V101symbols
-
-from oldVersion import V111, V110, V101, V200, V210, V220
+# from oldVersion.V220.models import SynthesizerTrn as V220SynthesizerTrn
+# from oldVersion.V220.text import symbols as V220symbols
+# from oldVersion.V210.models import SynthesizerTrn as V210SynthesizerTrn
+# from oldVersion.V210.text import symbols as V210symbols
+# from oldVersion.V200.models import SynthesizerTrn as V200SynthesizerTrn
+# from oldVersion.V200.text import symbols as V200symbols
+# from oldVersion.V111.models import SynthesizerTrn as V111SynthesizerTrn
+# from oldVersion.V111.text import symbols as V111symbols
+# from oldVersion.V110.models import SynthesizerTrn as V110SynthesizerTrn
+# from oldVersion.V110.text import symbols as V110symbols
+# from oldVersion.V101.models import SynthesizerTrn as V101SynthesizerTrn
+# from oldVersion.V101.text import symbols as V101symbols
+# 
+# from oldVersion import V111, V110, V101, V200, V210, V220
 
 # 当前版本信息
 latest_version = "2.3"
 
-# 版本兼容
-SynthesizerTrnMap = {
-    "2.2": V220SynthesizerTrn,
-    "2.1": V210SynthesizerTrn,
-    "2.0.2-fix": V200SynthesizerTrn,
-    "2.0.1": V200SynthesizerTrn,
-    "2.0": V200SynthesizerTrn,
-    "1.1.1-fix": V111SynthesizerTrn,
-    "1.1.1": V111SynthesizerTrn,
-    "1.1": V110SynthesizerTrn,
-    "1.1.0": V110SynthesizerTrn,
-    "1.0.1": V101SynthesizerTrn,
-    "1.0": V101SynthesizerTrn,
-    "1.0.0": V101SynthesizerTrn,
-}
-
-symbolsMap = {
-    "2.2": V220symbols,
-    "2.1": V210symbols,
-    "2.0.2-fix": V200symbols,
-    "2.0.1": V200symbols,
-    "2.0": V200symbols,
-    "1.1.1-fix": V111symbols,
-    "1.1.1": V111symbols,
-    "1.1": V110symbols,
-    "1.1.0": V110symbols,
-    "1.0.1": V101symbols,
-    "1.0": V101symbols,
-    "1.0.0": V101symbols,
-}
+# # 版本兼容
+# SynthesizerTrnMap = {
+#     "2.2": V220SynthesizerTrn,
+#     "2.1": V210SynthesizerTrn,
+#     "2.0.2-fix": V200SynthesizerTrn,
+#     "2.0.1": V200SynthesizerTrn,
+#     "2.0": V200SynthesizerTrn,
+#     "1.1.1-fix": V111SynthesizerTrn,
+#     "1.1.1": V111SynthesizerTrn,
+#     "1.1": V110SynthesizerTrn,
+#     "1.1.0": V110SynthesizerTrn,
+#     "1.0.1": V101SynthesizerTrn,
+#     "1.0": V101SynthesizerTrn,
+#     "1.0.0": V101SynthesizerTrn,
+# }
+# 
+# symbolsMap = {
+#     "2.2": V220symbols,
+#     "2.1": V210symbols,
+#     "2.0.2-fix": V200symbols,
+#     "2.0.1": V200symbols,
+#     "2.0": V200symbols,
+#     "1.1.1-fix": V111symbols,
+#     "1.1.1": V111symbols,
+#     "1.1": V110symbols,
+#     "1.1.0": V110symbols,
+#     "1.0.1": V101symbols,
+#     "1.0": V101symbols,
+#     "1.0.0": V101symbols,
+# }
 
 
 # def get_emo_(reference_audio, emotion, sid):
@@ -81,24 +81,15 @@ symbolsMap = {
 #     return emo
 
 
-def get_net_g(model_path: str, version: str, device: str, hps):
-    if version != latest_version:
-        net_g = SynthesizerTrnMap[version](
-            len(symbolsMap[version]),
-            hps.data.filter_length // 2 + 1,
-            hps.train.segment_size // hps.data.hop_length,
-            n_speakers=hps.data.n_speakers,
-            **hps.model,
-        ).to(device)
-    else:
-        # 当前版本模型 net_g
-        net_g = SynthesizerTrn(
-            len(symbols),
-            hps.data.filter_length // 2 + 1,
-            hps.train.segment_size // hps.data.hop_length,
-            n_speakers=hps.data.n_speakers,
-            **hps.model,
-        ).to(device)
+def get_net_g(model_path: str, device: str, hps):
+    # 当前版本模型 net_g
+    net_g = SynthesizerTrn(
+        len(symbols),
+        hps.data.filter_length // 2 + 1,
+        hps.train.segment_size // hps.data.hop_length,
+        n_speakers=hps.data.n_speakers,
+        **hps.model,
+    ).to(device)
     _ = net_g.eval()
     _ = utils.load_checkpoint(model_path, net_g, None, skip_optimizer=True)
     return net_g
@@ -123,37 +114,16 @@ def get_text(text, language_str, hps, device, style_text=None, style_weight=0.7)
     del word2ph
     assert bert_ori.shape[-1] == len(phone), phone
 
-    if language_str == "ZH":
-        bert = bert_ori
-        ja_bert = torch.randn(1024, len(phone))
-        en_bert = torch.randn(1024, len(phone))
-        yue_bert = torch.randn(1024, len(phone))
-    elif language_str == "JP":
-        bert = torch.randn(1024, len(phone))
-        ja_bert = bert_ori
-        en_bert = torch.randn(1024, len(phone))
-        yue_bert = torch.randn(1024, len(phone))
-    elif language_str == "EN":
-        bert = torch.randn(1024, len(phone))
-        ja_bert = torch.randn(1024, len(phone))
-        en_bert = bert_ori
-        yue_bert = torch.randn(1024, len(phone))
-    elif language_str == "YUE":
-        bert = torch.randn(1024, len(phone))
-        ja_bert = torch.randn(1024, len(phone))
-        en_bert = torch.randn(1024, len(phone))
-        yue_bert = bert_ori
-    else:
-        raise ValueError("language_str should be ZH, JP, EN or YUE")
+    yue_bert = bert_ori
 
-    assert bert.shape[-1] == len(
+    assert yue_bert.shape[-1] == len(
         phone
-    ), f"Bert seq len {bert.shape[-1]} != {len(phone)}"
+    ), f"Bert seq len {yue_bert.shape[-1]} != {len(phone)}"
 
     phone = torch.LongTensor(phone)
     tone = torch.LongTensor(tone)
     language = torch.LongTensor(language)
-    return bert, ja_bert, en_bert, yue_bert, phone, tone, language
+    return yue_bert, phone, tone, language
 
 
 def infer(
@@ -175,96 +145,96 @@ def infer(
     style_weight=0.7,
 ):
     # 2.2版本参数位置变了
-    inferMap_V4 = {
-        "2.2": V220.infer,
-    }
-    # 2.1 参数新增 emotion reference_audio skip_start skip_end
-    inferMap_V3 = {
-        "2.1": V210.infer,
-    }
-    # 支持中日英三语版本
-    inferMap_V2 = {
-        "2.0.2-fix": V200.infer,
-        "2.0.1": V200.infer,
-        "2.0": V200.infer,
-        "1.1.1-fix": V111.infer_fix,
-        "1.1.1": V111.infer,
-        "1.1": V110.infer,
-        "1.1.0": V110.infer,
-    }
-    # 仅支持中文版本
-    # 在测试中，并未发现两个版本的模型不能互相通用
-    inferMap_V1 = {
-        "1.0.1": V101.infer,
-        "1.0": V101.infer,
-        "1.0.0": V101.infer,
-    }
-    version = hps.version if hasattr(hps, "version") else latest_version
+    # inferMap_V4 = {
+    #     "2.2": V220.infer,
+    # }
+    # # 2.1 参数新增 emotion reference_audio skip_start skip_end
+    # inferMap_V3 = {
+    #     "2.1": V210.infer,
+    # }
+    # # 支持中日英三语版本
+    # inferMap_V2 = {
+    #     "2.0.2-fix": V200.infer,
+    #     "2.0.1": V200.infer,
+    #     "2.0": V200.infer,
+    #     "1.1.1-fix": V111.infer_fix,
+    #     "1.1.1": V111.infer,
+    #     "1.1": V110.infer,
+    #     "1.1.0": V110.infer,
+    # }
+    # # 仅支持中文版本
+    # # 在测试中，并未发现两个版本的模型不能互相通用
+    # inferMap_V1 = {
+    #     "1.0.1": V101.infer,
+    #     "1.0": V101.infer,
+    #     "1.0.0": V101.infer,
+    # }
+    # version = hps.version if hasattr(hps, "version") else latest_version
     # 非当前版本，根据版本号选择合适的infer
-    if version != latest_version:
-        if version in inferMap_V4.keys():
-            return inferMap_V4[version](
-                text,
-                emotion,
-                sdp_ratio,
-                noise_scale,
-                noise_scale_w,
-                length_scale,
-                sid,
-                language,
-                hps,
-                net_g,
-                device,
-                reference_audio,
-                skip_start,
-                skip_end,
-                style_text,
-                style_weight,
-            )
-        if version in inferMap_V3.keys():
-            return inferMap_V3[version](
-                text,
-                sdp_ratio,
-                noise_scale,
-                noise_scale_w,
-                length_scale,
-                sid,
-                language,
-                hps,
-                net_g,
-                device,
-                reference_audio,
-                emotion,
-                skip_start,
-                skip_end,
-                style_text,
-                style_weight,
-            )
-        if version in inferMap_V2.keys():
-            return inferMap_V2[version](
-                text,
-                sdp_ratio,
-                noise_scale,
-                noise_scale_w,
-                length_scale,
-                sid,
-                language,
-                hps,
-                net_g,
-                device,
-            )
-        if version in inferMap_V1.keys():
-            return inferMap_V1[version](
-                text,
-                sdp_ratio,
-                noise_scale,
-                noise_scale_w,
-                length_scale,
-                sid,
-                hps,
-                net_g,
-                device,
-            )
+    # if version != latest_version:
+    #     if version in inferMap_V4.keys():
+    #         return inferMap_V4[version](
+    #             text,
+    #             emotion,
+    #             sdp_ratio,
+    #             noise_scale,
+    #             noise_scale_w,
+    #             length_scale,
+    #             sid,
+    #             language,
+    #             hps,
+    #             net_g,
+    #             device,
+    #             reference_audio,
+    #             skip_start,
+    #             skip_end,
+    #             style_text,
+    #             style_weight,
+    #         )
+    #     if version in inferMap_V3.keys():
+    #         return inferMap_V3[version](
+    #             text,
+    #             sdp_ratio,
+    #             noise_scale,
+    #             noise_scale_w,
+    #             length_scale,
+    #             sid,
+    #             language,
+    #             hps,
+    #             net_g,
+    #             device,
+    #             reference_audio,
+    #             emotion,
+    #             skip_start,
+    #             skip_end,
+    #             style_text,
+    #             style_weight,
+    #         )
+    #     if version in inferMap_V2.keys():
+    #         return inferMap_V2[version](
+    #             text,
+    #             sdp_ratio,
+    #             noise_scale,
+    #             noise_scale_w,
+    #             length_scale,
+    #             sid,
+    #             language,
+    #             hps,
+    #             net_g,
+    #             device,
+    #         )
+    #     if version in inferMap_V1.keys():
+    #         return inferMap_V1[version](
+    #             text,
+    #             sdp_ratio,
+    #             noise_scale,
+    #             noise_scale_w,
+    #             length_scale,
+    #             sid,
+    #             hps,
+    #             net_g,
+    #             device,
+    #         )
     # 在此处实现当前版本的推理
     # emo = get_emo_(reference_audio, emotion, sid)
     # if isinstance(reference_audio, np.ndarray):
@@ -273,7 +243,7 @@ def infer(
     #     emo = get_clap_text_feature(emotion, device)
     # emo = torch.squeeze(emo, dim=1)
 
-    bert, ja_bert, en_bert, yue_bert, phones, tones, lang_ids = get_text(
+    yue_bert, phones, tones, lang_ids = get_text(
         text,
         language,
         hps,
@@ -285,25 +255,16 @@ def infer(
         phones = phones[3:]
         tones = tones[3:]
         lang_ids = lang_ids[3:]
-        bert = bert[:, 3:]
-        ja_bert = ja_bert[:, 3:]
-        en_bert = en_bert[:, 3:]
         yue_bert = yue_bert[:, 3:]
     if skip_end:
         phones = phones[:-2]
         tones = tones[:-2]
         lang_ids = lang_ids[:-2]
-        bert = bert[:, :-2]
-        ja_bert = ja_bert[:, :-2]
-        en_bert = en_bert[:, :-2]
         yue_bert = yue_bert[:, :-2]
     with torch.no_grad():
         x_tst = phones.to(device).unsqueeze(0)
         tones = tones.to(device).unsqueeze(0)
         lang_ids = lang_ids.to(device).unsqueeze(0)
-        bert = bert.to(device).unsqueeze(0)
-        ja_bert = ja_bert.to(device).unsqueeze(0)
-        en_bert = en_bert.to(device).unsqueeze(0)
         yue_bert = yue_bert.to(device).unsqueeze(0)
         x_tst_lengths = torch.LongTensor([phones.size(0)]).to(device)
         # emo = emo.to(device).unsqueeze(0)
@@ -316,9 +277,6 @@ def infer(
                 speakers,
                 tones,
                 lang_ids,
-                bert,
-                ja_bert,
-                en_bert,
                 yue_bert,
                 sdp_ratio=sdp_ratio,
                 noise_scale=noise_scale,
@@ -333,11 +291,8 @@ def infer(
             x_tst,
             tones,
             lang_ids,
-            bert,
             x_tst_lengths,
             speakers,
-            ja_bert,
-            en_bert,
             yue_bert,
         )  # , emo
         if torch.cuda.is_available():
@@ -361,7 +316,7 @@ def infer_multilang(
     skip_start=False,
     skip_end=False,
 ):
-    bert, ja_bert, en_bert, yue_bert, phones, tones, lang_ids = [], [], [], [], [], [], []
+    yue_bert, phones, tones, lang_ids = [], [], [], [], [], [], []
     # emo = get_emo_(reference_audio, emotion, sid)
     # if isinstance(reference_audio, np.ndarray):
     #     emo = get_clap_audio_feature(reference_audio, device)
@@ -372,40 +327,25 @@ def infer_multilang(
         _skip_start = (idx != 0) or (skip_start and idx == 0)
         _skip_end = (idx != len(language) - 1) or skip_end
         (
-            temp_bert,
-            temp_ja_bert,
-            temp_en_bert,
             temp_yue_bert,
             temp_phones,
             temp_tones,
             temp_lang_ids,
         ) = get_text(txt, lang, hps, device)
         if _skip_start:
-            temp_bert = temp_bert[:, 3:]
-            temp_ja_bert = temp_ja_bert[:, 3:]
-            temp_en_bert = temp_en_bert[:, 3:]
             temp_yue_bert = temp_yue_bert[:, 3:]
             temp_phones = temp_phones[3:]
             temp_tones = temp_tones[3:]
             temp_lang_ids = temp_lang_ids[3:]
         if _skip_end:
-            temp_bert = temp_bert[:, :-2]
-            temp_ja_bert = temp_ja_bert[:, :-2]
-            temp_en_bert = temp_en_bert[:, :-2]
             temp_yue_bert = temp_yue_bert[:, :-2]
             temp_phones = temp_phones[:-2]
             temp_tones = temp_tones[:-2]
             temp_lang_ids = temp_lang_ids[:-2]
-        bert.append(temp_bert)
-        ja_bert.append(temp_ja_bert)
-        en_bert.append(temp_en_bert)
         yue_bert.append(temp_yue_bert)
         phones.append(temp_phones)
         tones.append(temp_tones)
         lang_ids.append(temp_lang_ids)
-    bert = torch.concatenate(bert, dim=1)
-    ja_bert = torch.concatenate(ja_bert, dim=1)
-    en_bert = torch.concatenate(en_bert, dim=1)
     yue_bert = torch.concatenate(yue_bert, dim=1)
     phones = torch.concatenate(phones, dim=0)
     tones = torch.concatenate(tones, dim=0)
@@ -414,9 +354,6 @@ def infer_multilang(
         x_tst = phones.to(device).unsqueeze(0)
         tones = tones.to(device).unsqueeze(0)
         lang_ids = lang_ids.to(device).unsqueeze(0)
-        bert = bert.to(device).unsqueeze(0)
-        ja_bert = ja_bert.to(device).unsqueeze(0)
-        en_bert = en_bert.to(device).unsqueeze(0)
         yue_bert = yue_bert.to(device).unsqueeze(0)
         # emo = emo.to(device).unsqueeze(0)
         x_tst_lengths = torch.LongTensor([phones.size(0)]).to(device)
@@ -429,9 +366,6 @@ def infer_multilang(
                 speakers,
                 tones,
                 lang_ids,
-                bert,
-                ja_bert,
-                en_bert,
                 yue_bert,
                 sdp_ratio=sdp_ratio,
                 noise_scale=noise_scale,
@@ -446,11 +380,8 @@ def infer_multilang(
             x_tst,
             tones,
             lang_ids,
-            bert,
             x_tst_lengths,
             speakers,
-            ja_bert,
-            en_bert,
             yue_bert,
         )  # , emo
         if torch.cuda.is_available():
