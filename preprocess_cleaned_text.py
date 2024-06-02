@@ -6,7 +6,6 @@ import os
 
 from tqdm import tqdm
 import click
-from text.cleaner import clean_text
 from config import config
 from infer import latest_version
 
@@ -15,11 +14,10 @@ preprocess_text_config = config.preprocess_text_config
 
 @click.command()
 @click.option(
-    "--transcription-path",
-    default=preprocess_text_config.transcription_path,
+    "--cleaned-path",
+    required=True,
     type=click.Path(exists=True, file_okay=True, dir_okay=False),
 )
-@click.option("--cleaned-path", default=preprocess_text_config.cleaned_path)
 @click.option("--train-path", default=preprocess_text_config.train_path)
 @click.option("--val-path", default=preprocess_text_config.val_path)
 @click.option(
@@ -29,58 +27,21 @@ preprocess_text_config = config.preprocess_text_config
 )
 @click.option("--val-per-lang", default=preprocess_text_config.val_per_lang)
 @click.option("--max-val-total", default=preprocess_text_config.max_val_total)
-@click.option("--clean/--no-clean", default=preprocess_text_config.clean)
 @click.option("-y", "--yml_config")
 def preprocess(
-    transcription_path: str,
-    cleaned_path: Optional[str],
+    cleaned_path: str,
     train_path: str,
     val_path: str,
     config_path: str,
     val_per_lang: int,
     max_val_total: int,
-    clean: bool,
     yml_config: str,  # 这个不要删
 ):
-    if cleaned_path == "" or cleaned_path is None:
-        cleaned_path = transcription_path + ".cleaned"
-
-    if clean:
-        with open(cleaned_path, "w", encoding="utf-8") as out_file:
-            with open(transcription_path, "r", encoding="utf-8") as trans_file:
-                lines = trans_file.readlines()
-                # print(lines, ' ', len(lines))
-                if len(lines) != 0:
-                    for line in tqdm(lines):
-                        try:
-                            utt, spk, language, text = line.strip().split("|")
-                            # norm_text, phones, tones, word2ph = clean_text(
-                            #     text, language, spk == "ciugo" # Bypass G2P if SPK is ciugo
-                            # )
-                            norm_text, phones, tones, word2ph = clean_text(
-                                text, language, False
-                            )
-                            out_file.write(
-                                "{}|{}|{}|{}|{}|{}|{}\n".format(
-                                    utt,
-                                    spk,
-                                    language,
-                                    norm_text,
-                                    " ".join(phones),
-                                    " ".join([str(i) for i in tones]),
-                                    " ".join([str(i) for i in word2ph]),
-                                )
-                            )
-                        except Exception as e:
-                            print(line)
-                            print(f"生成训练集和验证集时发生错误！, 详细信息:\n{e}")
-
-    transcription_path = cleaned_path
     spk_utt_map = defaultdict(list)
     spk_id_map = {}
     current_sid = 0
 
-    with open(transcription_path, "r", encoding="utf-8") as f:
+    with open(cleaned_path, "r", encoding="utf-8") as f:
         audioPaths = set()
         countSame = 0
         countNotFound = 0

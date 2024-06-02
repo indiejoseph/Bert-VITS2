@@ -10,7 +10,7 @@
 
 import torch
 import commons
-from text import cleaned_text_to_sequence, get_bert
+from text import cleaned_text_to_sequence
 
 # from clap_wrapper import get_clap_audio_feature, get_clap_text_feature
 from typing import Union
@@ -108,22 +108,12 @@ def get_text(text, language_str, hps, device, style_text=None, style_weight=0.7)
         for i in range(len(word2ph)):
             word2ph[i] = word2ph[i] * 2
         word2ph[0] += 1
-    bert_ori = get_bert(
-        norm_text, word2ph, language_str, device, style_text, style_weight
-    )
     del word2ph
-    assert bert_ori.shape[-1] == len(phone), phone
-
-    yue_bert = bert_ori
-
-    assert yue_bert.shape[-1] == len(
-        phone
-    ), f"Bert seq len {yue_bert.shape[-1]} != {len(phone)}"
 
     phone = torch.LongTensor(phone)
     tone = torch.LongTensor(tone)
     language = torch.LongTensor(language)
-    return yue_bert, phone, tone, language
+    return phone, tone, language
 
 
 def infer(
@@ -243,7 +233,7 @@ def infer(
     #     emo = get_clap_text_feature(emotion, device)
     # emo = torch.squeeze(emo, dim=1)
 
-    yue_bert, phones, tones, lang_ids = get_text(
+    phones, tones, lang_ids = get_text(
         text,
         language,
         hps,
@@ -255,17 +245,14 @@ def infer(
         phones = phones[3:]
         tones = tones[3:]
         lang_ids = lang_ids[3:]
-        yue_bert = yue_bert[:, 3:]
     if skip_end:
         phones = phones[:-2]
         tones = tones[:-2]
         lang_ids = lang_ids[:-2]
-        yue_bert = yue_bert[:, :-2]
     with torch.no_grad():
         x_tst = phones.to(device).unsqueeze(0)
         tones = tones.to(device).unsqueeze(0)
         lang_ids = lang_ids.to(device).unsqueeze(0)
-        yue_bert = yue_bert.to(device).unsqueeze(0)
         x_tst_lengths = torch.LongTensor([phones.size(0)]).to(device)
         # emo = emo.to(device).unsqueeze(0)
         del phones
@@ -277,7 +264,6 @@ def infer(
                 speakers,
                 tones,
                 lang_ids,
-                yue_bert,
                 sdp_ratio=sdp_ratio,
                 noise_scale=noise_scale,
                 noise_scale_w=noise_scale_w,
@@ -293,7 +279,6 @@ def infer(
             lang_ids,
             x_tst_lengths,
             speakers,
-            yue_bert,
         )  # , emo
         if torch.cuda.is_available():
             torch.cuda.empty_cache()
@@ -316,7 +301,7 @@ def infer_multilang(
     skip_start=False,
     skip_end=False,
 ):
-    yue_bert, phones, tones, lang_ids = [], [], [], [], [], [], []
+    phones, tones, lang_ids = [], [], [], [], [], [], []
     # emo = get_emo_(reference_audio, emotion, sid)
     # if isinstance(reference_audio, np.ndarray):
     #     emo = get_clap_audio_feature(reference_audio, device)
@@ -327,26 +312,21 @@ def infer_multilang(
         _skip_start = (idx != 0) or (skip_start and idx == 0)
         _skip_end = (idx != len(language) - 1) or skip_end
         (
-            temp_yue_bert,
             temp_phones,
             temp_tones,
             temp_lang_ids,
         ) = get_text(txt, lang, hps, device)
         if _skip_start:
-            temp_yue_bert = temp_yue_bert[:, 3:]
             temp_phones = temp_phones[3:]
             temp_tones = temp_tones[3:]
             temp_lang_ids = temp_lang_ids[3:]
         if _skip_end:
-            temp_yue_bert = temp_yue_bert[:, :-2]
             temp_phones = temp_phones[:-2]
             temp_tones = temp_tones[:-2]
             temp_lang_ids = temp_lang_ids[:-2]
-        yue_bert.append(temp_yue_bert)
         phones.append(temp_phones)
         tones.append(temp_tones)
         lang_ids.append(temp_lang_ids)
-    yue_bert = torch.concatenate(yue_bert, dim=1)
     phones = torch.concatenate(phones, dim=0)
     tones = torch.concatenate(tones, dim=0)
     lang_ids = torch.concatenate(lang_ids, dim=0)
@@ -354,7 +334,6 @@ def infer_multilang(
         x_tst = phones.to(device).unsqueeze(0)
         tones = tones.to(device).unsqueeze(0)
         lang_ids = lang_ids.to(device).unsqueeze(0)
-        yue_bert = yue_bert.to(device).unsqueeze(0)
         # emo = emo.to(device).unsqueeze(0)
         x_tst_lengths = torch.LongTensor([phones.size(0)]).to(device)
         del phones
@@ -366,7 +345,6 @@ def infer_multilang(
                 speakers,
                 tones,
                 lang_ids,
-                yue_bert,
                 sdp_ratio=sdp_ratio,
                 noise_scale=noise_scale,
                 noise_scale_w=noise_scale_w,
@@ -382,7 +360,6 @@ def infer_multilang(
             lang_ids,
             x_tst_lengths,
             speakers,
-            yue_bert,
         )  # , emo
         if torch.cuda.is_available():
             torch.cuda.empty_cache()

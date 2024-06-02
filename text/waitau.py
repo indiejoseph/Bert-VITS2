@@ -5,6 +5,7 @@ import pinyin_jyutping
 import pycantonese
 
 from text.symbols import punctuation
+# from symbols import punctuation
 
 from functools import reduce
 
@@ -23,6 +24,7 @@ INITIALS = [
     "äp",
     "ät",
     "äk",
+    "æ",
     "a",
     "p",
     "b",
@@ -185,6 +187,7 @@ def rom_to_initials_finals_tones(jyuping_syllables):
                         tones.extend([tone, tone])
                         word2ph.append(2)
                     break
+    print(initials_finals)
     assert len(initials_finals) == len(tones)
     assert sum(word2ph) == len(initials_finals)
     return initials_finals, tones, word2ph
@@ -194,10 +197,10 @@ def get_jyutping(text):
     converted_text = j.jyutping(text, tone_numbers=True, spaces=True)
     converted_words = converted_text.split()
 
-    # replace ... with …
-    converted_text = re.sub(r"\.{2,}", "…", converted_text)
-    # replace -- with -
-    converted_text = re.sub(r"-{2,}", "-", converted_text)
+    # # replace ... with …
+    # converted_text = re.sub(r"\.{2,}", "…", converted_text)
+    # # replace -- with -
+    # converted_text = re.sub(r"-{2,}", "-", converted_text)
 
     for i, word in enumerate(converted_words):
         if set(word) <= set(text) - set(punctuation):
@@ -245,13 +248,14 @@ def get_bert_feature(text, word2ph):
     return cantonese_bert.get_bert_feature(text, word2ph)
 
 
-def g2p(text):
+def g2p(text, g2p_bypass=False):
     word2ph = []
-    jyuping = get_jyutping(text)
-    # print(jyuping)
-    rom = [jyutping2waitau(j) for j in jyuping]
-    # print(rom)
-    phones, tones, word2ph = rom_to_initials_finals_tones(rom)
+    if not g2p_bypass:
+        jyuping = get_jyutping(text)
+        rom = [jyutping2waitau(j) for j in jyuping]
+        phones, tones, word2ph = rom_to_initials_finals_tones(rom)
+    else:
+        phones, tones, word2ph = rom_to_initials_finals_tones(text)
     phones = ["_"] + phones + ["_"]
     tones = [0] + tones + [0]
     word2ph = [1] + word2ph + [1]
@@ -314,15 +318,23 @@ if __name__ == "__main__":
             args.metadata = "./metadata.csv"
         test_dataset(args.dataset, args.metadata)
     else:
-        from text.cantonese_bert import get_bert_feature
+        g2p_bypass = False
+        # from text.cantonese_bert import get_bert_feature
 
         # text = "你點解會咁柒㗎？我真係唔該晒你呀！"
         text = "佢哋最叻咪就係去㗇人傷害人,得個殼咋!"
-        text = "不妨聽聽西廂記裏面鶯鶯嘅唱詞."
+        text = "不妨聽聽西廂記裏面鶯鶯嘅唱詞." # g2p_bypass = False
+        text = "ni1 seng4 yäk6 co1 go2 täu4" # g2p_bypass = True
+        text = "咗"
 
-        text = text_normalize(text)
-        print(text)
-        phones, tones, word2ph = g2p(text)
-        bert = get_bert_feature(text, word2ph)
+        if not g2p_bypass:
+            text = text_normalize(text)
+            print(text)
+        else:
+            text = text.split() # text: list
+            print(text)
+        phones, tones, word2ph = g2p(text, g2p_bypass)
+        # bert = get_bert_feature(text, word2ph)
 
-        print(phones, tones, word2ph, bert.shape)
+        # print(phones, tones, word2ph, bert.shape)
+        print(phones, tones, word2ph)

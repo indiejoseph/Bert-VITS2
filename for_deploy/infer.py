@@ -115,7 +115,13 @@ def get_text(text, language_str, bert, hps, device):
     del word2ph
     assert bert_ori.shape[-1] == len(phone), phone
 
-    yue_bert = bert_ori
+    if language_str == "WAITAU":
+        bert = torch.randn(1024, len(phone))
+        ja_bert = torch.randn(1024, len(phone))
+        en_bert = torch.randn(1024, len(phone))
+        yue_bert = bert_ori
+    else:
+        raise ValueError("language_str should be ZH, JP, EN or WAITAU")
 
     assert bert.shape[-1] == len(
         phone
@@ -124,7 +130,7 @@ def get_text(text, language_str, bert, hps, device):
     phone = torch.LongTensor(phone)
     tone = torch.LongTensor(tone)
     language = torch.LongTensor(language)
-    return yue_bert, phone, tone, language
+    return bert, ja_bert, en_bert, phone, tone, language
 
 
 def infer(

@@ -87,14 +87,14 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         # separate filename, speaker_id and text
         audiopath, sid, language, text, phones, tone, word2ph = audiopath_sid_text
 
-        yue_bert, phones, tone, language = self.get_text(
+        phones, tone, language = self.get_text(
             text, word2ph, phones, tone, language, audiopath
         )
 
         spec, wav = self.get_audio(audiopath)
         sid = torch.LongTensor([int(self.spk_map[sid])])
 
-        return (phones, spec, wav, sid, tone, language, yue_bert)
+        return (phones, spec, wav, sid, tone, language)
 
     def get_audio(self, filename):
         audio, sampling_rate = load_wav_to_torch(filename)
@@ -148,19 +148,11 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
             for i in range(len(word2ph)):
                 word2ph[i] = word2ph[i] * 2
             word2ph[0] += 1
-        bert_path = wav_path.replace(".wav", ".bert.pt")
-        try:
-            bert_ori = torch.load(bert_path)
-            assert bert_ori.shape[-1] == len(phone)
-        except Exception as e:
-            logger.warning("Bert load Failed")
-            logger.warning(e)
 
-        yue_bert = bert_ori
         phone = torch.LongTensor(phone)
         tone = torch.LongTensor(tone)
         language = torch.LongTensor(language)
-        return yue_bert, phone, tone, language
+        return phone, tone, language
 
     def get_sid(self, sid):
         sid = torch.LongTensor([int(sid)])
@@ -202,7 +194,6 @@ class TextAudioSpeakerCollate:
         text_padded = torch.LongTensor(len(batch), max_text_len)
         tone_padded = torch.LongTensor(len(batch), max_text_len)
         language_padded = torch.LongTensor(len(batch), max_text_len)
-        yue_bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
 
         spec_padded = torch.FloatTensor(
             len(batch), batch[0][1].size(0), max_spec_len)
@@ -212,7 +203,6 @@ class TextAudioSpeakerCollate:
         language_padded.zero_()
         spec_padded.zero_()
         wav_padded.zero_()
-        yue_bert_padded.zero_()
 
         for i in range(len(ids_sorted_decreasing)):
             row = batch[ids_sorted_decreasing[i]]
@@ -237,9 +227,6 @@ class TextAudioSpeakerCollate:
             language = row[5]
             language_padded[i, : language.size(0)] = language
 
-            yue_bert = row[6]
-            yue_bert_padded[i, :, : yue_bert.size(1)] = yue_bert
-
         return (
             text_padded,
             text_lengths,
@@ -250,7 +237,6 @@ class TextAudioSpeakerCollate:
             sid,
             tone_padded,
             language_padded,
-            yue_bert_padded,
         )
 
 

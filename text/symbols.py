@@ -83,6 +83,7 @@ waitau_symbols = [
     "z",
     "ä",
     "äing",
+    "æ",
     "æing",
     "æk",
     "æng",

@@ -397,7 +397,7 @@ if __name__ == "__main__":
     # 若config.json中未指定版本则默认为最新版本
     version = hps.version if hasattr(hps, "version") else latest_version
     net_g = get_net_g(
-        model_path=config.webui_config.model, version=version, device=device, hps=hps
+        model_path=config.webui_config.model, device=device, hps=hps
     )
     speaker_ids = hps.data.spk2id
     speakers = list(speaker_ids.keys())
