@@ -199,7 +199,6 @@ def jyuping_to_initials_finals_tones(jyuping_syllables):
                             initial):] or initial[-1]
                         initials_finals.extend([initial, final])
                         tones.extend([tone, tone])
-                        print(syllable)
                         word2ph.append(2)
                     break
 
@@ -227,7 +226,6 @@ def get_jyutping(text):
                 raise ValueError(
                     f"Failed to convert {word} to jyutping: {jyutpings}")
 
-            print("jyutpings", word, jyutpings)
             jyutping_array.extend(jyutpings.split(" "))
 
     return jyutping_array
@@ -252,8 +250,8 @@ def g2p(text):
 if __name__ == "__main__":
     from text.cantonese_bert import get_bert_feature
 
-    # text = "你點解會咁柒㗎？我真係唔該晒你呀！"
-    text = "佢哋最叻咪就係去㗇人傷害人,得個殼咋!"
+    text = "你點解會咁柒㗎？我真係唔該晒你呀！"
+    # text = "佢哋最叻咪就係去㗇人傷害人,得個殼咋!"
     text = text_normalize(text)
     phones, tones, word2ph = g2p(text)
     bert = get_bert_feature(text, word2ph)
