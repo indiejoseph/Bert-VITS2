@@ -1,16 +1,32 @@
 import re
 import unicodedata
 import cn2an
-import pinyin_jyutping
 import pycantonese
+import jieba
 
 from text.symbols import punctuation
+
+jieba.load_userdict("./text/yue_dict.txt")
+
+jyutping_dict = {}
+
+with open("./text/jyutping.csv", "r") as f:
+    for line in f:
+        line = line.strip()
+        if not line:
+            continue
+        word, jyutping = line.split(",")
+        jyutping_dict[word] = jyutping
 
 
 def normalizer(x): return cn2an.transform(x, "an2cn")
 
 
-j = pinyin_jyutping.PinyinJyutping()
+def word2jyutping(word):
+    jyutpings = [pycantonese.characters_to_jyutping(w)[0][1] for w in word]
+
+    return " ".join(jyutpings)
+
 
 INITIALS = [
     "aa",
@@ -162,10 +178,10 @@ def jyuping_to_initials_finals_tones(jyuping_syllables):
                 tone = int(syllable[-1])
                 syllable_without_tone = syllable[:-1]
             except ValueError:
-                tone = 0
-                syllable_without_tone = syllable
+                raise ValueError(f"Failed to convert {syllable}")
 
-            assert str(tone) in "123456"
+            assert str(
+                tone) in "0123456", f"Failed to convert {syllable} with tone {tone}"
 
             for initial in INITIALS:
                 if syllable_without_tone.startswith(initial):
@@ -183,36 +199,36 @@ def jyuping_to_initials_finals_tones(jyuping_syllables):
                             initial):] or initial[-1]
                         initials_finals.extend([initial, final])
                         tones.extend([tone, tone])
+                        print(syllable)
                         word2ph.append(2)
                     break
+
     assert len(initials_finals) == len(tones)
     return initials_finals, tones, word2ph
 
 
 def get_jyutping(text):
-    converted_text = j.jyutping(text, tone_numbers=True, spaces=True)
-    converted_words = converted_text.split()
+    words = jieba.cut(text)
+    jyutping_array = []
 
-    # replace ... with …
-    converted_text = re.sub(r'\.{2,}', '…', converted_text)
-    # replace -- with -
-    converted_text = re.sub(r'-{2,}', '-', converted_text)
+    for word in words:
+        if word in punctuation:
+            jyutping_array.append(word)
+        else:
+            jyutpings = ""
 
-    for i, word in enumerate(converted_words):
-        if set(word) <= set(text) - set(punctuation):
-            converted_word = pycantonese.characters_to_jyutping(word)[0][1]
-            converted_words[i] = converted_word
+            if word in jyutping_dict:
+                jyutpings = jyutping_dict[word]
+            else:
+                jyutpings = word2jyutping(word)
 
-        if converted_words[i] not in punctuation and re.search(r'^[a-zA-Z]+[1-6]$', converted_words[i]) is None:
-            raise ValueError(
-                f"Failed to convert {converted_words[i]}, {converted_text}")
+            # match multple jyutping eg: liu4 ge3, or single jyutping eg: liu4
+            if not re.search(r"^([a-z]+[1-6]+[ ]?)+$", jyutpings):
+                raise ValueError(
+                    f"Failed to convert {word} to jyutping: {jyutpings}")
 
-    jyutping_sentence = " ".join(converted_words)
-
-    for symbol in punctuation:
-        jyutping_sentence = jyutping_sentence.replace(
-            symbol, " " + symbol + " ")
-    jyutping_array = jyutping_sentence.split()
+            print("jyutpings", word, jyutpings)
+            jyutping_array.extend(jyutpings.split(" "))
 
     return jyutping_array
 
@@ -239,7 +255,6 @@ if __name__ == "__main__":
     # text = "你點解會咁柒㗎？我真係唔該晒你呀！"
     text = "佢哋最叻咪就係去㗇人傷害人,得個殼咋!"
     text = text_normalize(text)
-    print(text)
     phones, tones, word2ph = g2p(text)
     bert = get_bert_feature(text, word2ph)
 

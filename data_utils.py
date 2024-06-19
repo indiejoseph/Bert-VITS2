@@ -87,14 +87,14 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
         # separate filename, speaker_id and text
         audiopath, sid, language, text, phones, tone, word2ph = audiopath_sid_text
 
-        bert, ja_bert, en_bert, yue_bert, phones, tone, language = self.get_text(
+        en_bert, yue_bert, phones, tone, language = self.get_text(
             text, word2ph, phones, tone, language, audiopath
         )
 
         spec, wav = self.get_audio(audiopath)
         sid = torch.LongTensor([int(self.spk_map[sid])])
 
-        return (phones, spec, wav, sid, tone, language, bert, ja_bert, en_bert, yue_bert)
+        return (phones, spec, wav, sid, tone, language, en_bert, yue_bert)
 
     def get_audio(self, filename):
         audio, sampling_rate = load_wav_to_torch(filename)
@@ -156,30 +156,16 @@ class TextAudioSpeakerLoader(torch.utils.data.Dataset):
             logger.warning("Bert load Failed")
             logger.warning(e)
 
-        if language_str == "ZH":
-            bert = bert_ori
-            ja_bert = torch.randn(1024, len(phone))
-            en_bert = torch.randn(1024, len(phone))
-            yue_bert = torch.randn(1024, len(phone))
-        elif language_str == "JP":
-            bert = torch.randn(1024, len(phone))
-            ja_bert = bert_ori
-            en_bert = torch.randn(1024, len(phone))
-            yue_bert = torch.randn(1024, len(phone))
-        elif language_str == "EN":
-            bert = torch.randn(1024, len(phone))
-            ja_bert = torch.randn(1024, len(phone))
+        if language_str == "EN":
             en_bert = bert_ori
             yue_bert = torch.randn(1024, len(phone))
         elif language_str == "YUE":
-            bert = torch.randn(1024, len(phone))
-            ja_bert = torch.randn(1024, len(phone))
             en_bert = torch.randn(1024, len(phone))
             yue_bert = bert_ori
         phone = torch.LongTensor(phone)
         tone = torch.LongTensor(tone)
         language = torch.LongTensor(language)
-        return bert, ja_bert, en_bert, yue_bert, phone, tone, language
+        return en_bert, yue_bert, phone, tone, language
 
     def get_sid(self, sid):
         sid = torch.LongTensor([int(sid)])
@@ -221,8 +207,6 @@ class TextAudioSpeakerCollate:
         text_padded = torch.LongTensor(len(batch), max_text_len)
         tone_padded = torch.LongTensor(len(batch), max_text_len)
         language_padded = torch.LongTensor(len(batch), max_text_len)
-        bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
-        ja_bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
         en_bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
         yue_bert_padded = torch.FloatTensor(len(batch), 1024, max_text_len)
 
@@ -234,8 +218,6 @@ class TextAudioSpeakerCollate:
         language_padded.zero_()
         spec_padded.zero_()
         wav_padded.zero_()
-        bert_padded.zero_()
-        ja_bert_padded.zero_()
         en_bert_padded.zero_()
         yue_bert_padded.zero_()
 
@@ -262,16 +244,10 @@ class TextAudioSpeakerCollate:
             language = row[5]
             language_padded[i, : language.size(0)] = language
 
-            bert = row[6]
-            bert_padded[i, :, : bert.size(1)] = bert
-
-            ja_bert = row[7]
-            ja_bert_padded[i, :, : ja_bert.size(1)] = ja_bert
-
-            en_bert = row[8]
+            en_bert = row[6]
             en_bert_padded[i, :, : en_bert.size(1)] = en_bert
 
-            yue_bert = row[9]
+            yue_bert = row[7]
             yue_bert_padded[i, :, : yue_bert.size(1)] = yue_bert
 
         return (
@@ -284,8 +260,6 @@ class TextAudioSpeakerCollate:
             sid,
             tone_padded,
             language_padded,
-            bert_padded,
-            ja_bert_padded,
             en_bert_padded,
             yue_bert_padded,
         )
