@@ -23,7 +23,8 @@ def normalizer(x): return cn2an.transform(x, "an2cn")
 
 
 def word2jyutping(word):
-    jyutpings = [pycantonese.characters_to_jyutping(w)[0][1] for w in word]
+    jyutpings = [pycantonese.characters_to_jyutping(
+        w)[0][1] for w in word if unicodedata.name(w, "").startswith("CJK UNIFIED IDEOGRAPH")]
 
     return " ".join(jyutpings)
 
@@ -138,13 +139,10 @@ replacement_chars = {
 
 
 def replace_punctuation(text):
-    # text = text.replace("嗯", "恩").replace("呣", "母")
     pattern = re.compile("|".join(re.escape(p) for p in rep_map.keys()))
-
     replaced_text = pattern.sub(lambda x: rep_map[x.group()], text)
-
     replaced_text = "".join(
-        c for c in replaced_text if unicodedata.name(c, "").startswith("CJK UNIFIED IDEOGRAPH") or c in punctuation
+        c for c in replaced_text if unicodedata.name(c, "").startswith("CJK UNIFIED IDEOGRAPH") or c in punctuation or c in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 "
     )
 
     return replaced_text
@@ -156,10 +154,16 @@ def replace_chars(text):
     return text
 
 
+def word_segmentation(text):
+    words = jieba.cut(text)
+    return words
+
+
 def text_normalize(text):
+    text = replace_chars(text)
     text = normalizer(text)
     text = replace_punctuation(text)
-    text = replace_chars(text)
+
     return text
 
 
@@ -207,7 +211,7 @@ def jyuping_to_initials_finals_tones(jyuping_syllables):
 
 
 def get_jyutping(text):
-    words = jieba.cut(text)
+    words = word_segmentation(text)
     jyutping_array = []
 
     for word in words:
@@ -222,7 +226,7 @@ def get_jyutping(text):
                 jyutpings = word2jyutping(word)
 
             # match multple jyutping eg: liu4 ge3, or single jyutping eg: liu4
-            if not re.search(r"^([a-z]+[1-6]+[ ]?)+$", jyutpings):
+            if len(jyutpings) > 0 and not re.search(r"^([a-z]+[1-6]+[ ]?)+$", jyutpings):
                 raise ValueError(
                     f"Failed to convert {word} to jyutping: {jyutpings}")
 
@@ -240,6 +244,7 @@ def get_bert_feature(text, word2ph):
 def g2p(text):
     word2ph = []
     jyuping = get_jyutping(text)
+    print(jyuping)
     phones, tones, word2ph = jyuping_to_initials_finals_tones(jyuping)
     phones = ["_"] + phones + ["_"]
     tones = [0] + tones + [0]
@@ -250,9 +255,10 @@ def g2p(text):
 if __name__ == "__main__":
     from text.cantonese_bert import get_bert_feature
 
-    text = "你點解會咁柒㗎？我真係唔該晒你呀！"
+    text = "Apple BB 你點解會咁柒㗎？我真係唔該晒你呀！123"
     # text = "佢哋最叻咪就係去㗇人傷害人,得個殼咋!"
     text = text_normalize(text)
+    print('normalized text', text)
     phones, tones, word2ph = g2p(text)
     bert = get_bert_feature(text, word2ph)
 
