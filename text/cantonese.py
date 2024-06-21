@@ -244,7 +244,6 @@ def get_bert_feature(text, word2ph):
 def g2p(text):
     word2ph = []
     jyuping = get_jyutping(text)
-    print(jyuping)
     phones, tones, word2ph = jyuping_to_initials_finals_tones(jyuping)
     phones = ["_"] + phones + ["_"]
     tones = [0] + tones + [0]
