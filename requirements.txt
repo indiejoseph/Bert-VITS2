@@ -18,6 +18,7 @@ loguru
 unidic-lite
 cmudict
 fugashi
+opencc
 num2words
 PyYAML
 requests

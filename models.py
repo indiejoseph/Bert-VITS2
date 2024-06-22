@@ -936,11 +936,10 @@ class SynthesizerTrn(nn.Module):
             hidden_channels, 256, 3, 0.5, gin_channels=gin_channels
         )
 
-        # if n_speakers >= 1:
-        #     self.emb_g = nn.Embedding(n_speakers, gin_channels)
-        # else:
-        #     self.ref_enc = ReferenceEncoder(spec_channels, gin_channels)
-        self.ref_enc = ReferenceEncoder(spec_channels, gin_channels)
+        if n_speakers >= 1:
+            self.emb_g = nn.Embedding(n_speakers, gin_channels)
+        else:
+            self.ref_enc = ReferenceEncoder(spec_channels, gin_channels)
 
     def forward(
         self,
@@ -954,11 +953,10 @@ class SynthesizerTrn(nn.Module):
         en_bert,
         yue_bert,
     ):
-        # if self.n_speakers > 0:
-        #     g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
-        # else:
-        #     g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
-        g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
+        if self.n_speakers > 0:
+            g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
+        else:
+            g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
 
         x, m_p, logs_p, x_mask = self.enc_p(
             x, x_lengths, tone, language, en_bert, yue_bert, g=g
@@ -1054,11 +1052,10 @@ class SynthesizerTrn(nn.Module):
     ):
         # x, m_p, logs_p, x_mask = self.enc_p(x, x_lengths, tone, language, bert)
         # g = self.gst(y)
-        # if self.n_speakers > 0:
-        #     g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
-        # else:
-        #     g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
-        g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
+        if self.n_speakers > 0:
+            g = self.emb_g(sid).unsqueeze(-1)  # [b, h, 1]
+        else:
+            g = self.ref_enc(y.transpose(1, 2)).unsqueeze(-1)
 
         x, m_p, logs_p, x_mask = self.enc_p(
             x, x_lengths, tone, language, en_bert, yue_bert, g=g
