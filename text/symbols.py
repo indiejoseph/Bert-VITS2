@@ -46,10 +46,9 @@ en_symbols = [
 ]
 num_en_tones = 4
 
-# cantonese
-
+# Cantonese
 yue_symbols = [
-    "a",
+    "",
     "aa",
     "aai",
     "aak",
@@ -73,15 +72,13 @@ yue_symbols = [
     "e",
     "ei",
     "ek",
+    "em",
     "eng",
     "eoi",
     "eon",
     "eot",
-    "eu",
-    "em",
-    "en",
     "ep",
-    "et",
+    "eu",
     "f",
     "g",
     "gw",
@@ -99,7 +96,9 @@ yue_symbols = [
     "kw",
     "l",
     "m",
+    "m",
     "n",
+    "ng",
     "ng",
     "o",
     "oe",
@@ -113,9 +112,6 @@ yue_symbols = [
     "ou",
     "p",
     "s",
-    "sil",
-    "sp",
-    "spl",
     "t",
     "u",
     "ui",
@@ -127,6 +123,7 @@ yue_symbols = [
     "yu",
     "yun",
     "yut",
+    "z"
 ]
 
 num_yue_tones = 7

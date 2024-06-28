@@ -37,58 +37,21 @@ def word2jyutping(word):
     jyutpings = [pycantonese.characters_to_jyutping(
         w)[0][1] for w in word if unicodedata.name(w, "").startswith("CJK UNIFIED IDEOGRAPH")]
 
+    for i, j in enumerate(jyutpings):
+        if re.search(r"^(la|ga)[1-6]$", j):
+            # la1 -> laa1, ga1 -> gaa1
+            jyutpings[i] = jyutpings[i].replace('a', 'aa')
+
     if None in jyutpings:
         raise ValueError(f"Failed to convert {word} to jyutping: {jyutpings}")
 
     return " ".join(jyutpings)
 
 
-INITIALS = [
-    "aa",
-    "aai",
-    "aak",
-    "aap",
-    "aat",
-    "aau",
-    "ai",
-    "au",
-    "ap",
-    "at",
-    "ak",
-    "a",
-    "p",
-    "b",
-    "e",
-    "ts",
-    "t",
-    "dz",
-    "d",
-    "kw",
-    "k",
-    "gw",
-    "g",
-    "f",
-    "h",
-    "l",
-    "m",
-    "ng",
-    "n",
-    "s",
-    "y",
-    "w",
-    "c",
-    "z",
-    "j",
-    "ong",
-    "on",
-    "ou",
-    "oi",
-    "ok",
-    "o",
-    "uk",
-    "ung",
-]
-
+INITIALS = ["", "b", "c", "d", "f", "g", "gw", "h", "j",
+            "k", "kw", "l", "m", "n", "ng", "p", "s", "t", "w", "z"]
+FINALS = ["aa", "aai", "aau", "aam", "aan", "aang", "aap", "aat", "aak", "ai", "au", "am", "an", "ang", "ap", "at", "ak", "e", "ei", "eu", "em", "eng", "ep", "ek", "i", "iu", "im",
+          "in", "ing", "ip", "it", "ik", "o", "oi", "ou", "on", "ong", "ot", "ok", "oe", "oeng", "oek", "eoi", "eon", "eot", "u", "ui", "un", "ung", "ut", "uk", "yu", "yun", "yut", "m", "ng"]
 
 rep_map = {
     "：": ",",
@@ -131,8 +94,7 @@ rep_map = {
 }
 
 replacement_chars = {
-    "\n": "￼",
-    ' ': '￼',
+    "\n": " ",
     'ㄧ': '一',
     '—': '一',
     '更': '更',
@@ -175,6 +137,7 @@ def word_segmentation(text):
 
 
 def text_normalize(text):
+    text = text.strip()
     text = normalizer(text)
     text = replace_punctuation(text)
     text = replace_chars(text)
@@ -187,38 +150,15 @@ def jyuping_to_initials_finals_tones(jyuping_syllables):
     word2ph = []
 
     for syllable in jyuping_syllables:
-        if syllable in punctuation or syllable in [" ", ""]:
+        if syllable in punctuation:
             initials_finals.append(syllable)
             tones.append(0)
             word2ph.append(1)  # Add 1 for punctuation
         else:
-            try:
-                tone = int(syllable[-1])
-                syllable_without_tone = syllable[:-1]
-            except:
-                raise ValueError(f"Failed to convert {syllable}")
-
-            assert str(
-                tone) in "0123456", f"Failed to convert {syllable} with tone {tone}"
-
-            for initial in INITIALS:
-                if syllable_without_tone.startswith(initial):
-                    if syllable_without_tone.startswith("nga"):
-                        initials_finals.extend(
-                            [
-                                syllable_without_tone[:2],
-                                syllable_without_tone[2:] or syllable_without_tone[-1],
-                            ]
-                        )
-                        tones.extend([tone, tone])
-                        word2ph.append(2)
-                    else:
-                        final = syllable_without_tone[len(
-                            initial):] or initial[-1]
-                        initials_finals.extend([initial, final])
-                        tones.extend([tone, tone])
-                        word2ph.append(2)
-                    break
+            init, final, tone = parse_jyutping(syllable)
+            initials_finals.extend([init, final])
+            tones.extend([tone, tone])
+            word2ph.append(2)
 
     assert len(initials_finals) == len(tones)
     return initials_finals, tones, word2ph
@@ -239,8 +179,11 @@ def get_jyutping(text):
             else:
                 jyutpings = word2jyutping(word)
 
+            if 'la1' in jyutpings:
+                print(text, words, jyutpings)
+
             # match multple jyutping eg: liu4 ge3, or single jyutping eg: liu4
-            if len(jyutpings) > 0 and not re.search(r"^([a-z]+[1-6]+[ ]?)+$", jyutpings):
+            if not re.search(r"^([a-z]+[1-6]+[ ]?)+$", jyutpings):
                 raise ValueError(
                     f"Failed to convert {word} to jyutping: {jyutpings}")
 
@@ -253,6 +196,45 @@ def get_bert_feature(text, word2ph):
     from text import cantonese_bert
 
     return cantonese_bert.get_bert_feature(text, word2ph)
+
+
+def parse_jyutping(jyutping):
+    orig_jyutping = jyutping
+
+    if len(jyutping) < 2:
+        raise ValueError(f"Jyutping string too short: {jyutping}")
+    init = ""
+    if jyutping[0] == 'n' and jyutping[1] == 'g' and len(jyutping) == 3:
+        init = ""
+    elif jyutping[0] == 'm' and len(jyutping) == 2:
+        init = ""
+    elif jyutping[0] == 'n' and jyutping[1] == 'g':
+        init = 'ng'
+        jyutping = jyutping[2:]
+    elif jyutping[0] == 'g' and jyutping[1] == 'w':
+        init = 'gw'
+        jyutping = jyutping[2:]
+    elif jyutping[0] == 'k' and jyutping[1] == 'w':
+        init = 'kw'
+        jyutping = jyutping[2:]
+    elif jyutping[0] in 'bpmfdtnlgkhwzcsj':
+        init = jyutping[0]
+        jyutping = jyutping[1:]
+    else:
+        jyutping = jyutping
+    try:
+        tone = int(jyutping[-1])
+        jyutping = jyutping[:-1]
+    except:
+        raise ValueError("Jyutping string does not end with a tone number")
+    final = jyutping
+
+    assert init in INITIALS, f"Invalid initial: {init}, in {orig_jyutping}"
+
+    if final not in FINALS:
+        raise ValueError(f"Invalid final: {final}, in {orig_jyutping}")
+
+    return [init, final, tone]
 
 
 def g2p(text):
