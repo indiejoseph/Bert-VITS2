@@ -4,9 +4,6 @@ import unicodedata
 import cn2an
 import pycantonese
 import jieba
-import opencc
-
-converter = opencc.OpenCC('s2t.json')
 
 
 jieba.load_userdict("./text/yue_dict.txt")
@@ -28,7 +25,6 @@ with open("./text/jyutping.csv", "r") as f:
 
 def normalizer(x):
     x = cn2an.transform(x, "an2cn")
-    x = converter.convert(x)
 
     return x
 
